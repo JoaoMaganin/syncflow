@@ -24,8 +24,5 @@ WORKDIR /usr/src/app
 # Copia a pasta de deploy autossuficiente do estágio anterior
 COPY --from=builder /prod/auth-service .
 
-# Expõe a porta que a aplicação vai usar
-EXPOSE 3001
-
 # Comando para iniciar a aplicação
 CMD ["node", "./dist/main.js"]
