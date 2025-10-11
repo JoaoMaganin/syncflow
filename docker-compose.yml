@@ -16,9 +16,32 @@ services:
     build:
       context: .
       dockerfile: ./apps/auth-service/Dockerfile
-    # Não precisa de 'ports' porque ele só é acessado internamente
+    env_file:
+      - ./apps/auth-service/.env
+    depends_on:
+      - db
     networks:
       - challenge-network
+  
+  # Postgres Database
+  db:
+    image: postgres:17.5-alpine3.21
+    container_name: db
+    attach: false
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432" #conflito de portas do postgres local
+    networks:
+      - challenge-network
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: challenge_db
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   challenge-network:
