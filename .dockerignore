@@ -1,0 +1,23 @@
+# Dependências locais - A MAIS IMPORTANTE
+**/node_modules
+
+# Caches e logs
+.turbo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Saídas de compilação (dist)
+# Não vamos ignorar a 'dist' por enquanto, pois o Dockerfile a utiliza, mas é bom saber.
+# dist
+# .next
+
+# Arquivos de ambiente e IDE
+.env
+.env*.local
+.vscode
+.idea
+
+# Arquivos do Git
+.git
+.gitignore

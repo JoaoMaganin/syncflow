@@ -1,0 +1,25 @@
+services:
+  # API Gateway
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: .
+      dockerfile: ./apps/api-gateway/Dockerfile
+    ports:
+      - '3001:3001'
+    networks:
+      - challenge-network
+
+  # Auth Service
+  auth-service:
+    container_name: auth-service
+    build:
+      context: .
+      dockerfile: ./apps/auth-service/Dockerfile
+    # Não precisa de 'ports' porque ele só é acessado internamente
+    networks:
+      - challenge-network
+
+networks:
+  challenge-network:
+    driver: bridge
