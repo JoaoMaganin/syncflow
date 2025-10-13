@@ -11,4 +11,4 @@ RUN pnpm install
 EXPOSE 3000
 
 # Comando padrão (será sobrescrito pelo docker-compose)
-CMD ["pnpm", "--filter", "web", "run", "dev"]
+CMD ["pnpm", "run", "dev"]
