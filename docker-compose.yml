@@ -7,6 +7,16 @@ services:
       dockerfile: ./apps/api-gateway/Dockerfile
     ports:
       - '3001:3001'
+    volumes:
+      - .:/app
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/api-gateway/node_modules
+    env_file:
+      - ./apps/api-gateway/.env
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
     networks:
       - challenge-network
 

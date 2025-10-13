@@ -1,6 +1,7 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { LoginUserDto } from './dto/login-user.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -17,5 +18,11 @@ export class AuthController {
     @Post('login')
     loginUser(@Body() loginUserDto: LoginUserDto) {
         return this.authService.send({ cmd: 'login' }, loginUserDto);
+    }
+
+    @Get('profile')
+    @UseGuards(AuthGuard('jwt')) // Se o token for inválido ou não existir, ele retorna um erro 401 Unauthorized automaticamente.
+    getProfile(@Req() req: any) {
+        return req.user;
     }
 }
