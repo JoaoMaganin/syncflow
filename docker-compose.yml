@@ -1,4 +1,19 @@
 services:
+
+  # Frontend React Application
+  web:
+    container_name: web
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      # target: development
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+    networks:
+      - challenge-network
+
   # API Gateway
   api-gateway:
     container_name: api-gateway
