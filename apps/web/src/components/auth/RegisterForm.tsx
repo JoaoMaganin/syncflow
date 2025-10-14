@@ -73,7 +73,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="password">Senha</Label>
-        <Input id="password" type="password" {...form.register('password')} />
+        <Input id="password" type="password" placeholder="Digite sua senha" {...form.register('password')} />
         {form.formState.errors.password && (
           <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
         )}

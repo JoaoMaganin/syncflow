@@ -25,4 +25,7 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({ nullable: true })
+  refreshToken?: string 
 }

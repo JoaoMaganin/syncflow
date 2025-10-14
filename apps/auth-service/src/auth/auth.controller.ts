@@ -28,4 +28,9 @@ export class AuthController {
     deleteUser(@Payload() payload: { id: string }) {
         return this.authService.deleteUser(payload.id);
     }
+
+    @MessagePattern({ cmd: 'refresh' })
+    async refresh(@Payload() data: { refreshToken: string }) {
+        return this.authService.refresh(data.refreshToken);
+    }
 }

@@ -60,10 +60,45 @@ export class AuthService {
     // 2. Gerar o accessToken
     const accessToken = await this.jwtService.signAsync(payload);
 
-    // 3. Retornar o token
+    // 3. Gerar o refreshToken
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '7d',
+    })
+
+    user.refreshToken = refreshToken;
+    await this.userRepository.save(user);
+
+    // 4. Retornar o token
     return {
       accessToken,
+      refreshToken,
+      username: user.username
     };
+  }
+
+  async refresh(refreshToken: string) {
+    if (!refreshToken) throw new UnauthorizedException('Refresh token ausente');
+
+    try {
+      // Verifica e decodifica
+      const payload = this.jwtService.verify(refreshToken);
+
+      const user = await this.userRepository.findOneBy({ id: payload.sub });
+      if (!user || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Refresh token inválido');
+      }
+
+      // Remove exp/iat para não gerar erro ao assinar
+      const { exp, iat, ...tokenPayload } = payload;
+
+      const newAccessToken = await this.jwtService.signAsync(tokenPayload, { expiresIn: '15m' });
+
+      // Retorna o mesmo refreshToken
+      return { accessToken: newAccessToken, refreshToken };
+    } catch (err) {
+      console.error('[DEBUG] Erro ao validar refreshToken:', err);
+      throw new UnauthorizedException('Refresh token inválido ou expirado');
+    }
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto) {

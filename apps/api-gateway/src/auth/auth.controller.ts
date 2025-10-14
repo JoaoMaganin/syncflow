@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { LoginUserDto } from './dto/login-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { firstValueFrom } from 'rxjs';
 
 @ApiTags('Auth & Users') // Agrupamento para o Swagger
 @Controller('auth')
@@ -61,5 +62,17 @@ export class AuthController {
     @ApiResponse({ status: 401, description: 'Não autorizado.' })
     deleteUser(@Param('id') id: string) {
         return this.authService.send({ cmd: 'delete_user' }, { id });
+    }
+
+    @Post('refresh')
+    async refresh(@Body() body: { refreshToken: string }) {
+        try {
+            return await firstValueFrom(
+                this.authService.send({ cmd: 'refresh' }, { refreshToken: body.refreshToken })
+            );
+        } catch (error) {
+            console.error('[Gateway] Erro vindo do microserviço Auth:', error);
+            throw new UnauthorizedException(error.message || 'Erro ao atualizar token');
+        }
     }
 }
