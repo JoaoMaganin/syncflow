@@ -17,3 +17,10 @@ export interface AuthResponse {
     username: string
   }
 }
+
+export interface AuthContextType {
+  token: string | null
+  isLoggedIn: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => void
+}

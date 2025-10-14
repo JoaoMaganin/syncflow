@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authService } from '@/services/auth.service'
 import { toast } from 'sonner'
+import { useAuth } from "@/context/AuthContext"
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um email válido.' }),
@@ -16,38 +17,26 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 interface LoginFormProps {
-  onSuccess?: () => void // ← chamada quando o login for bem-sucedido
+  onSuccess?: () => void // chamada quando o login for bem-sucedido
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   })
 
+  const { login } = useAuth();
+
   async function onSubmit(values: LoginFormValues) {
-    setLoading(true)
-    setError(null)
-
     try {
-      const response = await authService.login(values)
-      console.log('✅ Login realizado com sucesso:', response)
-
-      // Exemplo: salvar token localmente
-      localStorage.setItem('token', response.accessToken)
-
-      // Aqui você pode fechar o modal, atualizar contexto de auth, etc.
-      toast.success('Login realizado com sucesso! 🎉')
-      onSuccess?.() // ← fecha o modal, se a prop for passada
+      await login(values.email, values.password)
+      console.log("✅ Login realizado com sucesso!");
+      toast.success("Login realizado com sucesso!")
+      onSuccess?.()
     } catch (err: any) {
       console.error('Erro ao fazer login:', err)
-      setError(err.response?.data?.message || 'Erro ao fazer login. Verifique suas credenciais.')
       toast.error('Erro ao realizar login. Verifique suas credenciais.')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -83,14 +72,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         )}
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
       <Button
         type="submit"
         className="w-full"
-        disabled={loading}
       >
-        {loading ? 'Entrando...' : 'Entrar'}
+        Entrar
       </Button>
     </form>
   )

@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { Toaster } from "@/components/ui/sonner"
+import { AuthProvider } from '@/context/AuthContext'
 
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen' // Importa a árvore de rotas
@@ -21,8 +22,10 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <React.StrictMode>
-      <RouterProvider router={router} />
-      <Toaster richColors position="top-right" />
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster richColors position="top-right" />
+      </AuthProvider>
     </React.StrictMode>,
   )
 }

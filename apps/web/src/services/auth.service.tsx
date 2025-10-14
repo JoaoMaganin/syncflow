@@ -1,5 +1,5 @@
 import { publicClient } from './base'
-import type { AuthResponse, LoginData, RegisterData } from '../../../../packages/types/AuthServiceTypes'
+import type { AuthResponse, LoginData, RegisterData } from '../../../../packages/types/AuthTypes'
 
 export const authService = {
   register: async (data: RegisterData): Promise<AuthResponse> => {

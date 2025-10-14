@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { authService } from '@/services/auth.service'
+import { useAuth } from "@/context/AuthContext"
 
 const registerSchema = z.object({
   username: z.string().min(3, { message: 'O nome de usuário deve ter pelo menos 3 caracteres.' }),
@@ -22,30 +23,23 @@ interface RegisterFormProps {
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { username: '', email: '', password: '' },
+    defaultValues: { username: "", email: "", password: "" },
   })
+
+  const { login } = useAuth()
 
   async function onSubmit(values: RegisterFormValues) {
     try {
       // Registrar usuário
-      await authService.register({
-        username: values.username,
-        email: values.email,
-        password: values.password,
-      })
-
+      await authService.register(values);
       toast.success('Conta criada com sucesso!')
+
+      // Logar automaticamente
+      await login(values.email, values.password);
+      console.log('logado no sistema ao registar.');
 
       // Fechar o modal
       onSuccess?.()
-
-      // Logar automaticamente
-      const loginResponse = await authService.login({
-        email: values.email,
-        password: values.password,
-      })
-      localStorage.setItem('token', loginResponse.accessToken)
-
     } catch (error: any) {
       console.error(error)
       toast.error(error.response?.data?.message || 'Erro ao criar conta.')
@@ -64,7 +58,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" placeholder="seu@email.com" {...form.register('email')} />
+        <Input id="email" type="email" placeholder="seu@email.com" {...form.register("email")} />
         {form.formState.errors.email && (
           <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
         )}
