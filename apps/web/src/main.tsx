@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
+import { Toaster } from "@/components/ui/sonner"
 
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen' // Importa a árvore de rotas
@@ -21,6 +22,7 @@ if (!rootElement.innerHTML) {
   root.render(
     <React.StrictMode>
       <RouterProvider router={router} />
+      <Toaster richColors position="top-right" />
     </React.StrictMode>,
   )
 }

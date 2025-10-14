@@ -7,6 +7,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
 
+  app.enableCors({
+    origin: 'http://localhost:3000', // URL do seu front-end
+    credentials: true,               // permite envio de cookies/tokens
+  });
+
   app.useGlobalPipes(new ValidationPipe());
 
   // Configuração do Swagger

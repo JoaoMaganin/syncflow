@@ -14,6 +14,7 @@ export const Route = createFileRoute('/')({
 function HomePage() {
   // Estado para controlar qual formulário mostrar: 'login' ou 'register'
   const [view, setView] = useState<'login' | 'register'>('login')
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="p-4 flex flex-col items-center">
@@ -23,7 +24,7 @@ function HomePage() {
       </p>
 
       {/* O Modal de Autenticação */}
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button className="mt-8">Entrar ou Criar Conta</Button>
         </DialogTrigger>
@@ -40,7 +41,7 @@ function HomePage() {
           </DialogHeader>
 
           {/* Renderização condicional do formulário */}
-          {view === 'login' ? <LoginForm /> : <RegisterForm />}
+          {view === 'login' ? <LoginForm onSuccess={() => setOpen(false)} /> : <RegisterForm onSuccess={() => setOpen(false)} />}
 
           <DialogFooter className="text-sm">
             {view === 'login' ? (

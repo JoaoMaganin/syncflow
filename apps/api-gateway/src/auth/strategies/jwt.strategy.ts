@@ -6,9 +6,9 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly configService: ConfigService) {
-    const secret = configService.get<string>('JWT_SECRET');
+    // const secret = configService.get<string>('JWT_SECRET');
 
-    console.log('JWT Secret being used by API Gateway:', secret);
+    // console.log('JWT Secret being used by API Gateway:', secret);
 
     super({
       // Diz à estratégia como encontrar o token na requisição

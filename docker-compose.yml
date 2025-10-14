@@ -1,18 +1,18 @@
 services:
 
-  # Frontend React Application
-  web:
-    container_name: web
-    build:
-      context: .
-      dockerfile: ./apps/web/Dockerfile
-      # target: development
-    ports:
-      - '3000:3000'
-    environment:
-      - NODE_ENV=development
-    networks:
-      - challenge-network
+  # # Frontend React Application
+  # web:
+  #   container_name: web
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/web/Dockerfile
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     - NODE_ENV=development
+  #   networks:
+  #     - challenge-network
+  #   command: npm run dev -- --host 0.0.0.0
 
   # API Gateway
   api-gateway:
