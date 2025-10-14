@@ -9,10 +9,16 @@ import { authService } from '@/services/auth.service'
 import { useAuth } from "@/context/AuthContext"
 
 const registerSchema = z.object({
-  username: z.string().min(3, { message: 'O nome de usuário deve ter pelo menos 3 caracteres.' }),
-  email: z.string().email({ message: 'Por favor, insira um email válido.' }),
-  password: z.string().min(8, { message: 'A senha deve ter pelo menos 8 caracteres.' }),
+  username: z.string().min(3, { message: "O nome de usuário deve ter pelo menos 3 caracteres." }),
+  email: z.string().email({ message: "Por favor, insira um email válido." }),
+  password: z.string().min(8, { message: "A senha deve ter pelo menos 8 caracteres." }),
+  confirmPassword: z.string().min(8, { message: "Confirme sua senha." }),
 })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas não coincidem.",
+    path: ["confirmPassword"], // Aponta o erro no campo de confirmação
+  })
+
 
 type RegisterFormValues = z.infer<typeof registerSchema>
 
@@ -31,11 +37,12 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   async function onSubmit(values: RegisterFormValues) {
     try {
       // Registrar usuário
-      await authService.register(values);
-      toast.success('Conta criada com sucesso!')
+      const { username, email, password } = values
+      await authService.register({ username, email, password })
+      toast.success("Conta criada com sucesso!")
 
       // Logar automaticamente
-      await login(values.email, values.password);
+      await login(email, password);
       console.log('logado no sistema ao registar.');
 
       // Fechar o modal
@@ -69,6 +76,21 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <Input id="password" type="password" {...form.register('password')} />
         {form.formState.errors.password && (
           <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          placeholder="Confirme sua senha"
+          {...form.register("confirmPassword")}
+        />
+        {form.formState.errors.confirmPassword && (
+          <p className="text-sm text-destructive">
+            {form.formState.errors.confirmPassword.message}
+          </p>
         )}
       </div>
 
