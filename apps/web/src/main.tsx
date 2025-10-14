@@ -6,6 +6,7 @@ import { AuthProvider } from '@/context/AuthContext'
 
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen' // Importa a árvore de rotas
+import { Navbar } from './components/Navbar'
 
 // Cria a instância do roteador
 const router = createRouter({ routeTree })
@@ -23,6 +24,7 @@ if (!rootElement.innerHTML) {
   root.render(
     <React.StrictMode>
       <AuthProvider>
+        <Navbar />
         <RouterProvider router={router} />
         <Toaster richColors position="top-right" />
       </AuthProvider>
