@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { authService } from '@/services/auth.service'
-import { useAuth } from "@/context/AuthContext"
+import { useAuthStore } from '@/lib/authStore' // 1. Trocamos o useAuth pelo nosso store
 
 const registerSchema = z.object({
   username: z.string().min(3, { message: "O nome de usuário deve ter pelo menos 3 caracteres." }),
@@ -16,36 +16,46 @@ const registerSchema = z.object({
 })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem.",
-    path: ["confirmPassword"], // Aponta o erro no campo de confirmação
+    path: ["confirmPassword"],
   })
-
 
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 interface RegisterFormProps {
-  onSuccess?: () => void // Fechar modal
+  onSuccess?: () => void
 }
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { username: "", email: "", password: "" },
+    defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
   })
 
-  const { login } = useAuth()
+  // 2. Pegamos a função de login do nosso store, que serve para ATUALIZAR o estado
+  const { login: setAuthState } = useAuthStore()
 
   async function onSubmit(values: RegisterFormValues) {
     try {
-      // Registrar usuário
+      // Passo 1: Registrar o novo usuário
       const { username, email, password } = values
       await authService.register({ username, email, password })
-      toast.success("Conta criada com sucesso!")
+      toast.success("Conta criada com sucesso! Fazendo login...")
 
-      // Logar automaticamente
-      await login(email, password);
-      console.log('logado no sistema ao registar.');
+      // Passo 2: Logar o usuário automaticamente com as mesmas credenciais
+      const loginResponse = await authService.login({ email, password });
+      const { accessToken, user } = loginResponse;
+      
+      // Passo 3: Mapear os dados para o formato do nosso store
+      const userForStore = {
+        userId: user.id,
+        username: user.username,
+      };
 
-      // Fechar o modal
+      // Passo 4: Atualizar o estado global, o que vai atualizar a Navbar
+      setAuthState(userForStore, accessToken);
+      console.log('Logado no sistema ao registrar.');
+      
+      // Passo 5: Chamar a função de sucesso para fechar o modal
       onSuccess?.()
     } catch (error: any) {
       console.error(error)
@@ -55,6 +65,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      {/* O JSX do formulário continua o mesmo... */}
       <div className="space-y-2">
         <Label htmlFor="username">Nome de Usuário</Label>
         <Input id="username" placeholder="seu-usuario" {...form.register('username')} />
@@ -62,7 +73,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           <p className="text-sm text-destructive">{form.formState.errors.username.message}</p>
         )}
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" type="email" placeholder="seu@email.com" {...form.register("email")} />
@@ -70,7 +80,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
         )}
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="password">Senha</Label>
         <Input id="password" type="password" placeholder="Digite sua senha" {...form.register('password')} />
@@ -78,7 +87,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
         )}
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirmar Senha</Label>
         <Input
@@ -93,8 +101,13 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           </p>
         )}
       </div>
-
-      <Button type="submit" className="w-full">Criar Conta</Button>
+      <Button 
+        type="submit" 
+        className="w-full"
+        disabled={form.formState.isSubmitting}
+      >
+        {form.formState.isSubmitting ? 'Criando...' : 'Criar Conta'}
+      </Button>
     </form>
   )
 }
