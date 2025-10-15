@@ -12,6 +12,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      isLoginModalOpen: false,
       login: (user, token) => set({ user, token }),
       logout: () => {
         // Chame seu serviço para limpar o localStorage
@@ -23,6 +24,8 @@ export const useAuthStore = create<AuthState>()(
         // Recarregue a página para garantir que todo o estado da aplicação seja resetado.
         window.location.reload();
       },
+      openLoginModal: () => set({ isLoginModalOpen: true }),
+      closeLoginModal: () => set({ isLoginModalOpen: false }),
     }),
     {
       name: 'auth-storage',

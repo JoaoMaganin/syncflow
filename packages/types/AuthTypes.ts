@@ -37,6 +37,9 @@ export interface User {
 export interface AuthState {
   user: User | null;
   token: string | null;
+  isLoginModalOpen: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
 }
