@@ -10,7 +10,6 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/auth-service/.env',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
