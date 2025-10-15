@@ -4,7 +4,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
 
 @ApiTags('Auth & Users') // Agrupamento para o Swagger
@@ -65,10 +65,13 @@ export class AuthController {
     }
 
     @Post('refresh')
+    @ApiOperation({ summary: 'Atualiza o accessToken utilizando o refreshToken' })
+    @ApiResponse({ status: 200, description: 'Novo accessToken gerado com sucesso!' })
+    @ApiResponse({ status: 401, description: 'Não autorizado ou refreshToken vencido.' })
     async refresh(@Body() body: { refreshToken: string }) {
         try {
             return await firstValueFrom(
-                this.authService.send({ cmd: 'refresh' }, { refreshToken: body.refreshToken })
+                this.authService.send({ cmd: 'refresh' }, { refreshToken: body.refreshToken }),
             );
         } catch (error) {
             console.error('[Gateway] Erro vindo do microserviço Auth:', error);
