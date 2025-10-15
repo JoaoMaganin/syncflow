@@ -75,7 +75,7 @@ export const authService = {
     if (refreshTimeout) clearTimeout(refreshTimeout)
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
-    window.location.reload()
+    localStorage.removeItem('auth-storage')
     console.log('[DEBUG] Usuário deslogado.')
   },
 }

@@ -47,8 +47,9 @@ privateClient.interceptors.response.use(
 
         return privateClient(originalRequest)
       } catch (err) {
-        console.log('[DEBUG] refreshToken expirado ou inválido, deslogando usuário.')
+        console.log('[DEBUG] refreshToken expirado ou inválido, deslogando usuário.');
         authService.logout()
+        window.location.reload()
         return Promise.reject(err)
       }
     }

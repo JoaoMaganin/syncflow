@@ -60,7 +60,7 @@ export class AuthService {
     const payload = { sub: user.id, username: user.username };
 
     // 2. Gerar o accessToken
-    const accessToken = await this.jwtService.signAsync(payload, { expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN') || '30s'});
+    const accessToken = await this.jwtService.signAsync(payload, { expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN') || '30s' });
 
     // 3. Gerar o refreshToken
     const refreshToken = await this.jwtService.signAsync(payload, { expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN') || '2m', })
@@ -72,7 +72,10 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      username: user.username
+      user: {
+        id: user.id,
+        username: user.username
+      }
     };
   }
 

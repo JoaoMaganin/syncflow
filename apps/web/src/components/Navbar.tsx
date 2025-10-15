@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { LoginForm } from "@/components/auth/LoginForm"
 import { RegisterForm } from "@/components/auth/RegisterForm"
-import { useAuth } from "@/context/AuthContext"
+import { useAuthStore } from "@/lib/authStore"
 
 export function Navbar() {
-    const { isLoggedIn, logout } = useAuth()
+    const { user, logout } = useAuthStore()
     const [open, setOpen] = useState(false)
     const [view, setView] = useState<'login' | 'register'>('login')
 
@@ -14,11 +14,17 @@ export function Navbar() {
         <nav className="w-full flex justify-between items-center p-4 bg-stone-950 shadow-md">
             <div className="text-xl font-bold text-slate-50">SyncFlow</div>
 
-            {isLoggedIn ? (
-                <Button variant="destructive"  className="text-slate-50" onClick={logout}>
-                    Logout
-                </Button>
+            {/*  a condição agora é simplesmente "se o usuário existe" */}
+            {user ? (
+                // Se o usuário estiver logado, mostramos o nome dele e o botão de sair
+                <div className="flex items-center gap-4">
+                    <span className="text-sm text-slate-300">Olá, {user.username}!</span>
+                    <Button variant="destructive" className="text-slate-50" onClick={logout}>
+                        Sair
+                    </Button>
+                </div>
             ) : (
+                // Se o usuário não estiver logado, o modal de "Entrar" continua o mesmo
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                         <Button className="text-slate-50">Entrar</Button>

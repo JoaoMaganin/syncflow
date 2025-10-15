@@ -28,3 +28,15 @@ export interface AuthContextType {
   refreshToken: () => Promise<string>
   username?: string | null
 }
+
+export interface User {
+  userId: string;
+  username: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  login: (user: User, token: string) => void;
+  logout: () => void;
+}

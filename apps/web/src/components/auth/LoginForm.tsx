@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authService } from '@/services/auth.service'
 import { toast } from 'sonner'
-import { useAuth } from "@/context/AuthContext"
+import { useAuthStore } from "@/lib/authStore" // 1. Trocamos o useAuth pelo nosso novo store do Zustand
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um email válido.' }),
@@ -17,7 +16,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 interface LoginFormProps {
-  onSuccess?: () => void // chamada quando o login for bem-sucedido
+  onSuccess?: () => void
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
@@ -26,17 +25,30 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     defaultValues: { email: '', password: '' },
   })
 
-  const { login } = useAuth();
+  // Pegamos a função de login do nosso store, que serve para ATUALIZAR o estado
+  const { login: setAuthState } = useAuthStore();
 
   async function onSubmit(values: LoginFormValues) {
     try {
-      await login(values.email, values.password)
+      // A API agora retorna { accessToken, refreshToken, user: { id: '...', username: '...' } }
+      const response = await authService.login(values);
+      const { accessToken, user } = response; // Isso agora funciona!
+
+      // O 'user' da API já tem 'id', mas nosso store espera 'userId'.
+      // Então, o mapeamento ainda é necessário e correto.
+      const userForStore = {
+        userId: user.id,
+        username: user.username,
+      };
+
+      setAuthState(userForStore, accessToken);
+
       console.log("✅ Login realizado com sucesso!");
-      toast.success("Login realizado com sucesso!")
-      onSuccess?.()
+      toast.success(`Bem-vindo de volta, ${user.username}!`);
+      onSuccess?.();
     } catch (err: any) {
-      console.error('Erro ao fazer login:', err)
-      toast.error('Erro ao realizar login. Verifique suas credenciais.')
+      console.error('Erro ao fazer login:', err);
+      toast.error('Erro ao realizar login. Verifique suas credenciais.');
     }
   }
 
@@ -75,8 +87,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       <Button
         type="submit"
         className="w-full"
+        disabled={form.formState.isSubmitting} // Desabilita o botão durante o envio
       >
-        Entrar
+        {form.formState.isSubmitting ? 'Entrando...' : 'Entrar'}
       </Button>
     </form>
   )

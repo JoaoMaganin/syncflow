@@ -1,14 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/context/AuthContext'
 import { privateClient } from '@/services/base'
+import { useAuthStore } from '@/lib/authStore'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
 
 function HomePage() {
-  const { token } = useAuth()
+  const { token } = useAuthStore()
 
   const handleClick = async () => {
     try {
@@ -25,12 +25,14 @@ function HomePage() {
       <p className="mt-4 text-muted-foreground">
         A lista de tarefas aparecerá aqui quando o usuário estiver logado.
       </p>
-      <Button
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        onClick={handleClick}
-      >
-        Testar Profile
-      </Button>
+      {token && ( // Mostra o botão apenas se o usuário estiver logado
+        <Button
+          className="mt-8"
+          onClick={handleClick}
+        >
+          Testar Rota Protegida (/profile)
+        </Button>
+      )}
     </div>
   )
 }
