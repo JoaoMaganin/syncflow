@@ -2,35 +2,63 @@ import { createContext, useContext, useState, type ReactNode } from "react"
 import { authService } from "@/services/auth.service"
 import type { AuthContextType } from '../../../../packages/types/AuthTypes'
 
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"))
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("accessToken"))
+  const [username, setUsername] = useState<string | null>(() => {
+    const storedToken = localStorage.getItem("accessToken")
+    if (storedToken) {
+      try {
+        const payload = JSON.parse(atob(storedToken.split('.')[1]))
+        return payload.username
+      } catch {
+        return null
+      }
+    }
+    return null
+  })
 
-  // Função para logar
+  // Login
   const login = async (email: string, password: string) => {
     const response = await authService.login({ email, password })
-    console.log('Logado com sucesso!: ', response);
-    localStorage.setItem("token", response.accessToken)
     setToken(response.accessToken)
+
+    // Decodifica o username do accessToken
+    const payload = JSON.parse(atob(response.accessToken.split('.')[1]))
+    setUsername(payload.username)
+    console.log('[DEBUG] Logado com sucesso:', payload.username)
   }
 
-  // Função para deslogar
+  // Logout
   const logout = () => {
-    localStorage.removeItem("token")
+    authService.logout()
     setToken(null)
-    console.log('deslogado!!')
+    setUsername(null)
+  }
+
+  // Atualiza o accessToken (usado pelo interceptor)
+  const refreshToken = async () => {
+    try {
+      const newAccessToken = await authService.refresh()
+      setToken(newAccessToken)
+      const payload = JSON.parse(atob(newAccessToken.split('.')[1]))
+      setUsername(payload.username ?? null)
+      console.log('[DEBUG] accessToken renovado via refresh')
+      return newAccessToken
+    } catch (err) {
+      logout()
+      throw err
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ token, isLoggedIn: !!token, login, logout }}>
+    <AuthContext.Provider value={{ token, username, isLoggedIn: !!token, login, logout, refreshToken }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-// Hook para usar em qualquer componente
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) throw new Error("useAuth deve ser usado dentro do AuthProvider")

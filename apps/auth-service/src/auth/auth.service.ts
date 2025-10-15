@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +15,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) { }
 
   async createUser(createUserDto: CreateUserDTO) {
@@ -58,12 +60,10 @@ export class AuthService {
     const payload = { sub: user.id, username: user.username };
 
     // 2. Gerar o accessToken
-    const accessToken = await this.jwtService.signAsync(payload);
+    const accessToken = await this.jwtService.signAsync(payload, { expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN') || '30s'});
 
     // 3. Gerar o refreshToken
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '7d',
-    })
+    const refreshToken = await this.jwtService.signAsync(payload, { expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN') || '2m', })
 
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
@@ -91,7 +91,7 @@ export class AuthService {
       // Remove exp/iat para não gerar erro ao assinar
       const { exp, iat, ...tokenPayload } = payload;
 
-      const newAccessToken = await this.jwtService.signAsync(tokenPayload, { expiresIn: '15m' });
+      const newAccessToken = await this.jwtService.signAsync(tokenPayload, { expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN') || '30s' });
 
       // Retorna o mesmo refreshToken
       return { accessToken: newAccessToken, refreshToken };

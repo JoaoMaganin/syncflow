@@ -11,6 +11,8 @@ export interface LoginData {
 
 export interface AuthResponse {
   accessToken: string
+  refreshToken: string
+  expiresIn?: number
   user: {
     id: string
     email: string
@@ -23,4 +25,6 @@ export interface AuthContextType {
   isLoggedIn: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => void
+  refreshToken: () => Promise<string>
+  username?: string | null
 }
