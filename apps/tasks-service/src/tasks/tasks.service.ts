@@ -24,4 +24,12 @@ export class TasksService {
 
     return this.taskRepository.save(task);
   }
+
+  async findAllTasksByOwner(ownerId: string): Promise<Task[]> {
+    // Usa o repositório para encontrar todas as tarefas onde o ownerId corresponde.
+    return this.taskRepository.find({
+      where: { ownerId },
+      order: { createdAt: 'DESC' }, // Ordena da mais recente para a mais antiga
+    });
+  }
 }

@@ -12,4 +12,9 @@ export class TasksController {
     // Repassa os dados para o serviço executar a lógica de negócio
     return this.tasksService.create(payload.createTaskDto, payload.ownerId);
   }
+
+  @MessagePattern({ cmd: 'find_all_tasks_by_owner' })
+  findAllByOwner(@Payload() payload: { ownerId: string }) {
+    return this.tasksService.findAllTasksByOwner(payload.ownerId);
+  }
 }

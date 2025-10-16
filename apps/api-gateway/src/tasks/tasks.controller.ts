@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -20,6 +20,20 @@ export class TasksController {
     return this.tasksService.send(
       { cmd: 'create_task' },
       { createTaskDto, ownerId },
+    );
+  }
+
+  @Get()
+  @UseGuards(AuthGuard('jwt')) // A rota é protegida!
+  @ApiBearerAuth()
+  findAllTasks(@Req() req: any) {
+    // Extrai o ID do usuário do token (injetado pelo JwtAuthGuard)
+    const ownerId = req.user.userId;
+
+    // Envia o comando para o tasks-service
+    return this.tasksService.send(
+      { cmd: 'find_all_tasks_by_owner' },
+      { ownerId },
     );
   }
 }
