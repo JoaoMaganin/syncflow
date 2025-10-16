@@ -32,6 +32,11 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3001
+    depends_on:
+      db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     networks:
       - challenge-network
 
@@ -58,12 +63,15 @@ services:
       - '3003:3003'
     volumes:
       - .:/app
+      - ./packages:/app/packages
       - /app/node_modules
+      - /app/apps/tasks-service/node_modules
     env_file:
       - ./apps/tasks-service/.env
     environment:
       - NODE_ENV=development
       - PORT=3003
+    # command: pnpm --filter tasks-service run dev
     depends_on:
       db:
         condition: service_started
