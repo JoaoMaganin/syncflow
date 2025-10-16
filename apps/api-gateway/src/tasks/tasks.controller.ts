@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -10,7 +10,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 export class TasksController {
   constructor(
     @Inject('TASKS_SERVICE') private readonly tasksService: ClientProxy,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
@@ -66,4 +66,15 @@ export class TasksController {
     );
   }
 
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  deleteTask(@Param('id') id: string, @Req() req: any) {
+    const ownerId = req.user.userId;
+
+    return this.tasksService.send(
+      { cmd: 'delete_task' },
+      { id, ownerId },
+    );
+  }
 }

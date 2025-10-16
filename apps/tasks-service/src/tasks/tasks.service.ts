@@ -55,4 +55,17 @@ export class TasksService {
 
     return this.taskRepository.save(updatedTask);
   }
+
+  async deleteTask(id: string, ownerId: string): Promise<{ message: string }> {
+    // O método delete do repositório pode receber a condição diretamente.
+    const result = await this.taskRepository.delete({ id, ownerId });
+
+    // O 'result.affected' nos diz quantas linhas foram deletadas.
+    // Se for 0, significa que a tarefa não foi encontrada (ou não pertencia ao usuário).
+    if (result.affected === 0) {
+      throw new NotFoundException(`Tarefa com ID "${id}" não encontrada.`);
+    }
+
+    return { message: `Tarefa com ID "${id}" deletada com sucesso.` };
+  }
 }
