@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { TaskStatus } from '../enums/task-status.enum';
 import { TaskPriority } from '../enums/task-priority.enum';
+import { Comment } from './comment.entity';
 
 @Entity('tasks')
 export class Task {
@@ -49,5 +51,6 @@ export class Task {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // TODO: adicioanr "atribuição a múltiplos usuários", "comentários" e "histórico" depois que o CRUD básico estiver funcionando.
+  @OneToMany(() => Comment, (comment) => comment.task)
+  comments: Comment[];
 }
