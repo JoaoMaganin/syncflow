@@ -10,7 +10,7 @@ export class TasksService {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
-  ) {}
+  ) { }
 
   /*
    * Cria uma nova tarefa.
@@ -35,9 +35,9 @@ export class TasksService {
   }
 
   async findTaskById(id: string, ownerId: string): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id, ownerId});
+    const task = await this.taskRepository.findOneBy({ id, ownerId });
 
-    if(!task) {
+    if (!task) {
       throw new NotFoundException(`Tarefa com ID "${id}" não encontrada.`);
     }
 
@@ -45,9 +45,9 @@ export class TasksService {
   }
 
   async updateTask(id: string, ownerId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    const task = await this.findTaskById( id, ownerId);
+    const task = await this.findTaskById(id, ownerId);
 
-    if(!task) {
+    if (!task) {
       throw new NotFoundException(`Tarefa com ID "${id}" não encontrada.`);
     }
 
@@ -56,16 +56,11 @@ export class TasksService {
     return this.taskRepository.save(updatedTask);
   }
 
-  async deleteTask(id: string, ownerId: string): Promise<{ message: string }> {
-    // O método delete do repositório pode receber a condição diretamente.
-    const result = await this.taskRepository.delete({ id, ownerId });
+  async deleteTask(id: string, ownerId: string): Promise<Task> {
+    const task = await this.findTaskById(id, ownerId);
 
-    // O 'result.affected' nos diz quantas linhas foram deletadas.
-    // Se for 0, significa que a tarefa não foi encontrada (ou não pertencia ao usuário).
-    if (result.affected === 0) {
-      throw new NotFoundException(`Tarefa com ID "${id}" não encontrada.`);
-    }
+    await this.taskRepository.remove(task);
 
-    return { message: `Tarefa com ID "${id}" deletada com sucesso.` };
+    return task;
   }
 }
