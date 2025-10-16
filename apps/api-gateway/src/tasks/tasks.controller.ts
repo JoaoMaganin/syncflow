@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -36,4 +36,17 @@ export class TasksController {
       { ownerId },
     );
   }
+
+  @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  findTaskById(@Param('id') id: string, @Req() req: any) {
+    const ownerId = req.user.userId;
+
+    return this.tasksService.send(
+      { cmd: 'find_task_by_id' },
+      { id, ownerId },
+    );
+  }
+
 }

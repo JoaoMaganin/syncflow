@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
@@ -31,5 +31,15 @@ export class TasksService {
       where: { ownerId },
       order: { createdAt: 'DESC' }, // Ordena da mais recente para a mais antiga
     });
+  }
+
+  async findTaskById(id: string, ownerId: string): Promise<Task> {
+    const task = await this.taskRepository.findOneBy({ id, ownerId});
+
+    if(!task) {
+      throw new NotFoundException(`Tarefa com ID "${id}" não encontrada.`);
+    }
+
+    return task;
   }
 }

@@ -17,4 +17,9 @@ export class TasksController {
   findAllByOwner(@Payload() payload: { ownerId: string }) {
     return this.tasksService.findAllTasksByOwner(payload.ownerId);
   }
+
+  @MessagePattern({ cmd: 'find_task_by_id' })
+  findTaskById(@Payload() payload: { id: string; ownerId: string }) {
+    return this.tasksService.findTaskById(payload.id, payload.ownerId);
+  }
 }
