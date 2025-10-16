@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -41,5 +42,17 @@ export class TasksService {
     }
 
     return task;
+  }
+
+  async updateTask(id: string, ownerId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
+    const task = await this.findTaskById( id, ownerId);
+
+    if(!task) {
+      throw new NotFoundException(`Tarefa com ID "${id}" não encontrada.`);
+    }
+
+    const updatedTask = this.taskRepository.merge(task, updateTaskDto);
+
+    return this.taskRepository.save(updatedTask);
   }
 }

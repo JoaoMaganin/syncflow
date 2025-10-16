@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Inject, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -46,6 +47,22 @@ export class TasksController {
     return this.tasksService.send(
       { cmd: 'find_task_by_id' },
       { id, ownerId },
+    );
+  }
+
+  @Put(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  updateTask(
+    @Param('id') id: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @Req() req: any,
+  ) {
+    const ownerId = req.user.userId;
+
+    return this.tasksService.send(
+      { cmd: 'update_task' },
+      { id, ownerId, updateTaskDto },
     );
   }
 

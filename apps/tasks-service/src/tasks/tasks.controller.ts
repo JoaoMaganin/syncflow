@@ -2,6 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Controller()
 export class TasksController {
@@ -21,5 +22,10 @@ export class TasksController {
   @MessagePattern({ cmd: 'find_task_by_id' })
   findTaskById(@Payload() payload: { id: string; ownerId: string }) {
     return this.tasksService.findTaskById(payload.id, payload.ownerId);
+  }
+  
+  @MessagePattern({ cmd: 'update_task' })
+  update(@Payload() payload: { id: string; ownerId: string; updateTaskDto: UpdateTaskDto }) {
+    return this.tasksService.updateTask(payload.id, payload.ownerId, payload.updateTaskDto);
   }
 }
