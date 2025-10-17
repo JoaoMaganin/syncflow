@@ -72,7 +72,7 @@ export class TasksService {
   async addComment(taskId: string, authorId: string, content: string): Promise<Comment> {
     // Primeiro, verifica se a tarefa existe.
     const task = await this.taskRepository.findOneBy({ id: taskId });
-    
+
     if (!task) {
       throw new NotFoundException(`Tarefa com ID "${taskId}" não encontrada.`);
     }
@@ -84,5 +84,20 @@ export class TasksService {
     });
 
     return this.commentRepository.save(newComment);
+  }
+
+  async findCommentsByTask(taskId: string, userId: string): Promise<Comment[]> {
+    // Busca a tarefa e, se ela pertencer ao usuário, já carrega os comentários junto.
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId, ownerId: userId },
+      relations: ['comments'], // Diz ao TypeORM para "juntar" os comentários
+      order: { comments: { createdAt: 'DESC' } } // Ordena os comentários do mais novo para o mais antigo
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Tarefa com ID "${taskId}" não encontrada ou você não tem permissão para vê-la.`);
+    }
+
+    return task.comments;
   }
 }

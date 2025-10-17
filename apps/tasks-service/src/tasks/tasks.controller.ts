@@ -40,4 +40,9 @@ export class TasksController {
   addComment(@Payload() payload: { taskId: string; authorId: string; createCommentDto: CreateCommentDto }) {
     return this.tasksService.addComment(payload.taskId, payload.authorId, payload.createCommentDto.content);
   }
+
+  @MessagePattern({ cmd: 'find_comments_for_task' })
+  findCommentsByTask(@Payload() payload: { taskId: string; userId: string }) {
+    return this.tasksService.findCommentsByTask(payload.taskId, payload.userId);
+  }
 }

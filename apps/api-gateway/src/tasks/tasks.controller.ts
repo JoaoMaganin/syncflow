@@ -95,4 +95,15 @@ export class TasksController {
       { taskId, authorId, createCommentDto },
     );
   }
+
+  @Get(':id/comments')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  findComments(@Param('id') taskId: string, @Req() req: any) {
+    const userId = req.user.userId;
+    return this.tasksService.send(
+      { cmd: 'find_comments_for_task' },
+      { taskId, userId },
+    );
+  }
 }
