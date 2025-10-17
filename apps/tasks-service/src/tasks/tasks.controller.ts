@@ -3,10 +3,11 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Controller()
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) { }
 
   @MessagePattern({ cmd: 'create_task' })
   create(@Payload() payload: { createTaskDto: CreateTaskDto, ownerId: string }) {
@@ -23,7 +24,7 @@ export class TasksController {
   findTaskById(@Payload() payload: { id: string; ownerId: string }) {
     return this.tasksService.findTaskById(payload.id, payload.ownerId);
   }
-  
+
   @MessagePattern({ cmd: 'update_task' })
   updateTask(@Payload() payload: { id: string; ownerId: string; updateTaskDto: UpdateTaskDto }) {
     return this.tasksService.updateTask(payload.id, payload.ownerId, payload.updateTaskDto);
@@ -32,5 +33,11 @@ export class TasksController {
   @MessagePattern({ cmd: 'delete_task' })
   deleteTask(@Payload() payload: { id: string; ownerId: string }) {
     return this.tasksService.deleteTask(payload.id, payload.ownerId);
+  }
+
+  // Comentários
+  @MessagePattern({ cmd: 'add_comment_to_task' })
+  addComment(@Payload() payload: { taskId: string; authorId: string; createCommentDto: CreateCommentDto }) {
+    return this.tasksService.addComment(payload.taskId, payload.authorId, payload.createCommentDto.content);
   }
 }

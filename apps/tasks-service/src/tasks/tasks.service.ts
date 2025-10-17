@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
+import { Comment } from './entities/comment.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
@@ -10,6 +11,9 @@ export class TasksService {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>
   ) { }
 
   /*
@@ -62,5 +66,23 @@ export class TasksService {
     await this.taskRepository.remove(task);
 
     return task;
+  }
+
+  // Comentários
+  async addComment(taskId: string, authorId: string, content: string): Promise<Comment> {
+    // Primeiro, verifica se a tarefa existe.
+    const task = await this.taskRepository.findOneBy({ id: taskId });
+    
+    if (!task) {
+      throw new NotFoundException(`Tarefa com ID "${taskId}" não encontrada.`);
+    }
+
+    const newComment = this.commentRepository.create({
+      content,
+      authorId,
+      task, // O TypeORM é inteligente o suficiente para associar a tarefa aqui
+    });
+
+    return this.commentRepository.save(newComment);
   }
 }

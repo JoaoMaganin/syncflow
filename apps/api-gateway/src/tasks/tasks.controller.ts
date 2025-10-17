@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -75,6 +76,23 @@ export class TasksController {
     return this.tasksService.send(
       { cmd: 'delete_task' },
       { id, ownerId },
+    );
+  }
+
+  // Comentários
+  // ENDPOINT PARA CRIAR COMENTÁRIOS
+  @Post(':id/comments')
+  @UseGuards(AuthGuard('jwt')) // <-- ADICIONE ESTA LINHA
+  @ApiBearerAuth()             // <-- E ESTA LINHA
+  addComment(
+    @Param('id') taskId: string,
+    @Body() createCommentDto: CreateCommentDto,
+    @Req() req: any,
+  ) {
+    const authorId = req.user.userId;
+    return this.tasksService.send(
+      { cmd: 'add_comment_to_task' },
+      { taskId, authorId, createCommentDto },
     );
   }
 }
