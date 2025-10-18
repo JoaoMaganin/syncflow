@@ -2,6 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -9,6 +11,7 @@ import {
 import { TaskStatus } from '../enums/task-status.enum';
 import { TaskPriority } from '../enums/task-priority.enum';
 import { Comment } from './comment.entity';
+import { User } from './user.entity';
 
 @Entity('tasks')
 export class Task {
@@ -53,4 +56,12 @@ export class Task {
 
   @OneToMany(() => Comment, (comment) => comment.task)
   comments: Comment[];
+
+  @ManyToMany(() => User)
+  @JoinTable({
+    name: 'task_assignees_users', // Nome da tabela de junção
+    joinColumn: { name: 'taskId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  assignees: User[];
 }
