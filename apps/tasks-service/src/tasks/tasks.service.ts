@@ -64,10 +64,22 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
-  async findAllTasksByOwner(ownerId: string): Promise<Task[]> {
-    // Usa o repositório para encontrar todas as tarefas onde o ownerId corresponde.
+  async findAllTasksByUserId(ownerId: string): Promise<Task[]> {
+    // O TypeORM permite passar um array para o 'where',
+    // que funciona como uma cláusula 'OR'.
     return this.taskRepository.find({
-      where: { ownerId },
+      where: [
+        // Encontra tarefas onde o usuário é o criador
+        { ownerId: ownerId },
+
+        // OU encontra tarefas onde o ID do usuário está na lista de 'assignees'
+        { assignees: { id: ownerId } }
+      ],
+      // Também carregamos as relações para que o front-end saiba quem são os criadores e atribuídos
+      relations: {
+        assignees: true,
+        comments: true,
+      },
       order: { createdAt: 'DESC' }, // Ordena da mais recente para a mais antiga
     });
   }

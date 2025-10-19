@@ -34,7 +34,7 @@ export class TasksController {
 
     // Envia o comando para o tasks-service
     return this.tasksService.send(
-      { cmd: 'find_all_tasks_by_owner' },
+      { cmd: 'find_all_tasks_by_user' },
       { ownerId },
     );
   }
