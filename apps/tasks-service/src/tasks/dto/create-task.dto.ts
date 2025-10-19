@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { TaskPriority } from '../enums/task-priority.enum';
 import { TaskStatus } from '../enums/task-status.enum';
 
@@ -20,5 +20,8 @@ export class CreateTaskDto {
   @IsOptional()
   status?: TaskStatus;
 
-  // O ownerId será injetado pelo nosso serviço, não virá do cliente
+  @IsArray()
+  @IsUUID('all', { each: true }) // Valida se cada item no array é um UUID
+  @IsOptional()
+  assigneeIds?: string[];
 }

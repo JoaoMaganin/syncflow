@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { TaskPriority } from '../enums/task-priority.enum';
 import { TaskStatus } from '../enums/task-status.enum';
 
@@ -42,4 +42,15 @@ export class UpdateTaskDto {
   @IsEnum(TaskStatus)
   @IsOptional()
   status?: TaskStatus;
+
+  @ApiProperty({
+    description: 'Uma lista de IDs de usuários que irá substituir a lista de atribuídos existente.',
+    example: ['uuid-do-usuario-3'],
+    required: false,
+    type: [String],
+  })
+  @IsArray()
+  @IsUUID('all', { each: true })
+  @IsOptional()
+  assigneeIds?: string[];
 }
