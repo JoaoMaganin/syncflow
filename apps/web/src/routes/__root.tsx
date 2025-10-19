@@ -1,5 +1,6 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 export const Route = createRootRoute({
   component: () => (
@@ -7,6 +8,7 @@ export const Route = createRootRoute({
     <div className="bg-background text-foreground min-h-screen flex flex-col">
       <Outlet />
       <TanStackRouterDevtools />
+      <ReactQueryDevtools initialIsOpen={false} />
     </div>
   ),
 })
