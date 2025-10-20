@@ -127,7 +127,7 @@ export class TasksService {
   }
 
   // Comentários
-  async addComment(taskId: string, authorId: string, content: string): Promise<Comment> {
+  async addComment(taskId: string, authorId: string, authorUsername: string, content: string): Promise<Comment> {
     // Primeiro, verifica se a tarefa existe.
     const task = await this.taskRepository.findOneBy({ id: taskId });
 
@@ -138,6 +138,7 @@ export class TasksService {
     const newComment = this.commentRepository.create({
       content,
       authorId,
+      authorUsername,
       task, // O TypeORM é inteligente o suficiente para associar a tarefa aqui
     });
 

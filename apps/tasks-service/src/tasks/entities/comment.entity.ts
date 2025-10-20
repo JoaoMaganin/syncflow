@@ -12,6 +12,9 @@ export class Comment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column()
+  authorUsername: string;
+
   @Column({ type: 'text' })
   content: string;
 
