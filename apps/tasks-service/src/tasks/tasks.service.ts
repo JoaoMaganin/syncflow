@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
@@ -85,11 +85,25 @@ export class TasksService {
     });
   }
 
-  async findTaskById(id: string, ownerId: string): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id, ownerId });
+  async findTaskById(id: string, userId: string): Promise<Task> {
+    // Busca a tarefa pelo ID, já incluindo as relações
+    const task = await this.taskRepository.findOne({
+      where: { id },
+      relations: {
+        assignees: true,
+        comments: true,
+      },
+    });
 
     if (!task) {
       throw new NotFoundException(`Tarefa com ID "${id}" não encontrada.`);
+    }
+
+    const isOwner = task.ownerId === userId;
+    const isAssignee = task.assignees.some(user => user.id === userId);
+
+    if (!isOwner && !isAssignee) {
+      throw new ForbiddenException('Você não tem permissão para acessar esta tarefa.');
     }
 
     return task;

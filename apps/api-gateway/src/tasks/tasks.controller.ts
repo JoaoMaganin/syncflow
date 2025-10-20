@@ -44,11 +44,11 @@ export class TasksController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   findTaskById(@Param('id') id: string, @Req() req: any) {
-    const ownerId = req.user.userId;
+    const userId = req.user.userId;
 
     return this.tasksService.send(
       { cmd: 'find_task_by_id' },
-      { id, ownerId },
+      { id, userId },
     );
   }
 

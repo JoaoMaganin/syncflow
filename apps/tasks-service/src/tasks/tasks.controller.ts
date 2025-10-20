@@ -21,8 +21,8 @@ export class TasksController {
   }
 
   @MessagePattern({ cmd: 'find_task_by_id' })
-  findTaskById(@Payload() payload: { id: string; ownerId: string }) {
-    return this.tasksService.findTaskById(payload.id, payload.ownerId);
+  findTaskById(@Payload() payload: { id: string; userId: string }) {
+    return this.tasksService.findTaskById(payload.id, payload.userId);
   }
 
   @MessagePattern({ cmd: 'update_task' })

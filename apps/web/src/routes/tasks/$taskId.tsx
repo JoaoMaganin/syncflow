@@ -90,6 +90,25 @@ function TaskDetailPage() {
                 {task?.description || 'Nenhuma descrição fornecida.'}
             </p>
 
+            <div className="mt-6">
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Atribuído a</h3>
+                <div className="flex flex-wrap gap-2 mt-2">
+                    {/* Verifica se a lista de 'assignees' existe e não está vazia */}
+                    {task?.assignees && task.assignees.length > 0 ? (
+                        task.assignees.map(user => (
+                            <div
+                                key={user.id}
+                                className="p-1 px-3 rounded-full bg-secondary text-secondary-foreground text-sm font-medium"
+                            >
+                                {user.username}
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-muted-foreground">Ninguém</p>
+                    )}
+                </div>
+            </div>
+
             <hr className="my-8" />
 
             <h2 className="text-2xl font-bold mb-4">Comentários</h2>

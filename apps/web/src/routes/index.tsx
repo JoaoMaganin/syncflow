@@ -41,7 +41,7 @@ export interface Task {
   ownerUsername: string;
   createdAt: string;
   updatedAt: string;
-  assignees: { id: string }[];
+  assignees: { id: string, username: string }[];
   comments: { id: string }[];
 }
 
