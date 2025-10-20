@@ -10,9 +10,9 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) { }
 
   @MessagePattern({ cmd: 'create_task' })
-  create(@Payload() payload: { createTaskDto: CreateTaskDto, ownerId: string }) {
+  create(@Payload() payload: { createTaskDto: CreateTaskDto, ownerId: string, ownerUsername: string }) {
     // Repassa os dados para o serviço executar a lógica de negócio
-    return this.tasksService.createTask(payload.createTaskDto, payload.ownerId);
+    return this.tasksService.createTask(payload.createTaskDto, payload.ownerId, payload.ownerUsername);
   }
 
   @MessagePattern({ cmd: 'find_all_tasks_by_user' })

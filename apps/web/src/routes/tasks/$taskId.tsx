@@ -73,6 +73,10 @@ function TaskDetailPage() {
         <div className="p-4">
             <h1 className="text-3xl font-bold">{task?.title}</h1>
 
+            <p className="text-lg text-muted-foreground mt-2">
+                Criado por: <span className="font-medium text-foreground">{task?.ownerUsername}</span>
+            </p>
+
             <div className="flex gap-4 my-4 text-sm">
                 <span className="p-1 px-2 rounded bg-muted text-muted-foreground capitalize">
                     {task?.status.toLowerCase().replace('_', ' ')}

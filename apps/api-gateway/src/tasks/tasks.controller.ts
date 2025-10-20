@@ -18,10 +18,11 @@ export class TasksController {
   @ApiBearerAuth()
   createTask(@Body() createTaskDto: CreateTaskDto, @Req() req: any) {
     const ownerId = req.user.userId;
+    const ownerUsername = req.user.username;
 
     return this.tasksService.send(
       { cmd: 'create_task' },
-      { createTaskDto, ownerId },
+      { createTaskDto, ownerId, ownerUsername },
     );
   }
 

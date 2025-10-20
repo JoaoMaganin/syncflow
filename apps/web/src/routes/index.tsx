@@ -38,6 +38,7 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   ownerId: string;
+  ownerUsername: string;
   createdAt: string;
   updatedAt: string;
   assignees: { id: string }[];

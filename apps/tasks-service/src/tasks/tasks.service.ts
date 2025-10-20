@@ -45,7 +45,7 @@ export class TasksService {
    * @param createTaskDto - Os dados da tarefa a ser criada.
    * @param ownerId - O ID do usuário que está criando a tarefa (virá do token JWT).
    */
-  async createTask(createTaskDto: CreateTaskDto, ownerId: string): Promise<Task> {
+  async createTask(createTaskDto: CreateTaskDto, ownerId: string, ownerUsername: string): Promise<Task> {
     // Pega os assigneeIds de dentro do DTO
     const { assigneeIds, ...taskData } = createTaskDto;
 
@@ -58,6 +58,7 @@ export class TasksService {
     const task = this.taskRepository.create({
       ...taskData,
       ownerId,
+      ownerUsername,
       assignees, // Passa o array de entidades User para o TypeORM
     });
 

@@ -41,12 +41,12 @@ export class Task {
   })
   status: TaskStatus;
 
-  // --- Relacionamentos (começaremos simples) ---
-
-  // Por enquanto, vamos apenas guardar o ID do "dono" da tarefa.
-  // TODO: transformar isso em uma relação completa com a entidade User.
+  // --- Relacionamentos ---
   @Column()
   ownerId: string;
+
+  @Column() // <-- ADICIONE ESTA LINHA
+  ownerUsername: string;
 
   @CreateDateColumn()
   createdAt: Date;
