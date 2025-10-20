@@ -82,17 +82,21 @@ export class TasksController {
   // Comentários
   // ENDPOINT PARA CRIAR COMENTÁRIOS
   @Post(':id/comments')
-  @UseGuards(AuthGuard('jwt')) // <-- ADICIONE ESTA LINHA
-  @ApiBearerAuth()             // <-- E ESTA LINHA
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   addComment(
     @Param('id') taskId: string,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: any,
   ) {
+    // 1. Extraia ambos os dados do token
     const authorId = req.user.userId;
+    const authorUsername = req.user.username;
+
+    // 2. Adicione o authorUsername ao payload
     return this.tasksService.send(
       { cmd: 'add_comment_to_task' },
-      { taskId, authorId, createCommentDto },
+      { taskId, authorId, authorUsername, createCommentDto }, // <-- CORRIGIDO!
     );
   }
 
