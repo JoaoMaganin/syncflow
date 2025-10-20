@@ -72,10 +72,10 @@ export const authService = {
 
   // Logout
   logout: () => {
-    if (refreshTimeout) clearTimeout(refreshTimeout)
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('auth-storage')
-    console.log('[DEBUG] Usuário deslogado.')
+    if (refreshTimeout) {clearTimeout(refreshTimeout)}
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('auth-storage');
+    console.log('[DEBUG] Usuário deslogado.');
   },
 }

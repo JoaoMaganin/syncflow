@@ -4,32 +4,17 @@ import { Button } from '@/components/ui/button'
 import { privateClient } from '@/services/base'
 import { useAuthStore } from '@/lib/authStore'
 //import { AuthWall } from '@/components/auth/AuthWall'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger, } from '@/components/ui/dialog'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 import { useQuery } from '@tanstack/react-query'
 import { MessageSquare } from 'lucide-react'
+import { CreateTaskForm } from '@/components/tasks/CreateTaskForm'
+import type { TaskPriority, TaskStatus } from '../../../../packages/types/TaskTypes'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
-
-export const TaskStatus = {
-  TODO: 'TODO',
-  IN_PROGRESS: 'IN_PROGRESS',
-  REVIEW: 'REVIEW',
-  DONE: 'DONE',
-} as const;
-
-export const TaskPriority = {
-  LOW: 'LOW',
-  MEDIUM: 'MEDIUM',
-  HIGH: 'HIGH',
-  URGENT: 'URGENT',
-} as const;
-
-export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
-export type TaskPriority = (typeof TaskPriority)[keyof typeof TaskPriority];
 
 export interface Task {
   id: string;
@@ -47,8 +32,9 @@ export interface Task {
 
 function HomePage() {
   // Pegue o estado e as ações do modal do nosso store global
-  const { isLoginModalOpen, closeLoginModal, user, token } = useAuthStore()
-  const [view, setView] = useState<'login' | 'register'>('login')
+  const { isLoginModalOpen, closeLoginModal, user, token } = useAuthStore();
+  const [view, setView] = useState<'login' | 'register'>('login');
+  const [isCreateTaskOpen, setCreateTaskOpen] = useState(false);
 
   const fetchTasks = async (): Promise<Task[]> => {
     const response = await privateClient.get('/tasks')
@@ -124,16 +110,31 @@ function HomePage() {
     <div className="p-4 flex flex-col items-center">
       <h1 className="text-3xl font-bold mt-10">Página Principal (Tarefas)</h1>
 
+      {user && ( // Só mostra o botão se o usuário estiver logado
+        <Dialog open={isCreateTaskOpen} onOpenChange={setCreateTaskOpen}>
+          <DialogTrigger asChild>
+            <Button>Criar Tarefa</Button>
+          </DialogTrigger>
+          <DialogContent className="text-slate-50">
+            <DialogHeader>
+              <DialogTitle>Criar Nova Tarefa</DialogTitle>
+            </DialogHeader>
+            {/* 4. RENDERIZA O FORMULÁRIO DENTRO DO MODAL */}
+            <CreateTaskForm onSuccess={() => setCreateTaskOpen(false)} />
+          </DialogContent>
+        </Dialog>
+      )}
+
       {renderContent()}
 
-      {/* 3. Envolva o botão com o AuthWall */}
+      {/* Envolva o botão com o AuthWall */}
       {/* <AuthWall>
         <Button className="mt-8" onClick={handleClick}>
           Testar Rota Protegida (/profile)
         </Button>
       </AuthWall> */}
 
-      {/* 4. Adicione o Modal, controlado pelo Zustand */}
+      {/* Adicione o Modal, controlado pelo Zustand */}
       <Dialog open={isLoginModalOpen} onOpenChange={closeLoginModal}>
         <DialogContent className="sm:max-w-[425px] text-slate-50">
           <DialogHeader>

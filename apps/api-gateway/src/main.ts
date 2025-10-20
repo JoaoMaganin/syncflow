@@ -9,6 +9,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: 'http://localhost:3000', // URL do seu front-end
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,               // permite envio de cookies/tokens
   });
 

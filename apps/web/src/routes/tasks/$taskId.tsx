@@ -37,7 +37,7 @@ function TaskDetailPage() {
     const {
         data: comments,
         isLoading: isCommentsLoading,
-        isError: isCommentsError
+        //isError: isCommentsError
     } = useQuery({
         // A chave é única para os comentários DESTA tarefa
         queryKey: ['comments', taskId],
@@ -121,18 +121,16 @@ function TaskDetailPage() {
                 )}
 
                 {/* Mostra uma mensagem de erro se a busca de comentários falhar */}
-                {isCommentsError && (
+                {/* {isCommentsError && (
                     <p className="text-destructive">Erro ao carregar os comentários.</p>
-                )}
+                )} */}
 
                 {/* Se a busca for bem-sucedida... */}
                 {comments && (
                     <div className="space-y-4">
-                        {/* Se não houver comentários, mostra uma mensagem amigável */}
                         {comments.length === 0 && (
                             <p className="text-muted-foreground">Seja o primeiro a comentar!</p>
                         )}
-
                         {/* Se houver comentários, faz um .map() e exibe cada um */}
                         {comments.map((comment) => (
                             <div key={comment.id} className="p-4 border rounded-lg bg-muted/50">
