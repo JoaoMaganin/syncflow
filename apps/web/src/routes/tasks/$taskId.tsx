@@ -1,17 +1,32 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { privateClient } from '@/services/base'
 import type { Task, Comment } from '../../../../../packages/types/TaskTypes'
 import { CreateCommentForm } from '@/components/tasks/CreateCommentForm'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
 
-// A rota é inferida do nome do arquivo
+
+const commentsSearchSchema = z.object({
+    commentPage: z.number().int().min(1).optional(),
+    commentSize: z.number().int().min(1).optional()
+});
+
 export const Route = createFileRoute('/tasks/$taskId')({
+    validateSearch: (search) => commentsSearchSchema.parse(search),
     component: TaskDetailPage,
-})
+});
 
 function TaskDetailPage() {
-    // 1. Pegamos o 'taskId' da URL usando o hook do TanStack Router
-    const { taskId } = Route.useParams()
+    // Pegamos o 'taskId' da URL usando o hook do TanStack Router
+    const { taskId } = Route.useParams();
+
+    // Leia os parâmetros da URL (podem vir como 'undefined')
+    const { commentPage: urlCommentPage, commentSize: urlCommentSize } = useSearch({ from: Route.id });
+
+    // VALORES PADRÃO AQUI
+    const commentPage = urlCommentPage || 1;
+    const commentSize = urlCommentSize || 5;
 
     // --- Query 1: Buscar os dados da Tarefa ---
     const {
@@ -26,22 +41,27 @@ function TaskDetailPage() {
         },
     })
 
-    // --- Query 2: Buscar os Comentários (ADICIONE ISTO) ---
+    // --- Query 2: Buscar os Comentários ---
     const {
-        data: comments,
+        data: commentsResult,
         isLoading: isCommentsLoading,
         isError: isCommentsError
     } = useQuery({
-        // A chave é única para os comentários DESTA tarefa
-        queryKey: ['comments', taskId],
-        // A função de busca
-        queryFn: async (): Promise<Comment[]> => {
-            const response = await privateClient.get(`/tasks/${taskId}/comments`)
-            return response.data
+        queryKey: ['comments', taskId, commentPage, commentSize],
+        queryFn: async () => {
+            const params = new URLSearchParams({
+                page: commentPage.toString(),
+                size: commentSize.toString(),
+            })
+            const response = await privateClient.get(`/tasks/${taskId}/comments?${params.toString()}`)
+            return response.data as { data: Comment[]; totalPages: number }
         },
-        // Só executa esta query se a busca da tarefa principal (task) foi bem-sucedida
         enabled: !!task,
     })
+
+    // Extrai os dados do resultado paginado
+    const comments = commentsResult?.data
+    const totalCommentPages = commentsResult?.totalPages ?? 1
 
     if (isTaskLoading) {
         return (
@@ -113,7 +133,6 @@ function TaskDetailPage() {
 
             {/* --- Seção de comentários --- */}
             <div>
-
                 {/* Mostra "Carregando..." enquanto busca os comentários */}
                 {isCommentsLoading && (
                     <p className="text-muted-foreground">Carregando comentários...</p>
@@ -143,8 +162,80 @@ function TaskDetailPage() {
                         ))}
                     </div>
                 )}
+
+                {/* {totalCommentPages > 1 && (
+                    <div className="mt-6 flex justify-center items-center gap-4">
+                        <Button variant="outline" size="sm" asChild disabled={commentPage <= 1}>
+                            <Link
+                                search={(prev) => ({
+                                    ...prev,
+                                    commentPage: (prev.commentPage || 1) - 1, // Lógica segura
+                                })}
+                            >
+                                Anterior
+                            </Link>
+                        </Button>
+
+                        <span className="text-sm text-muted-foreground">
+                            Página {commentPage} de {totalCommentPages}
+                        </span>
+
+                        <Button variant="outline" size="sm" asChild disabled={commentPage >= totalCommentPages}>
+                            <Link
+                                search={(prev) => ({
+                                    ...prev,
+                                    commentPage: (prev.commentPage || 1) + 1, // Lógica segura
+                                })}
+                            >
+                                Próxima
+                            </Link>
+                        </Button>
+                    </div>
+
+
+                )} */}
+
+                {/* --- BLOCO DE PAGINAÇÃO ATUALIZADO --- */}
+                {comments && comments.length > 0 && (
+                    <div className="mt-6 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
+
+                        {/* Grupo 1: Controles de Página */}
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" asChild disabled={commentPage <= 1}>
+                                <Link search={(prev) => ({ ...prev, commentPage: (prev.commentPage || 1) - 1 })}>
+                                    Anterior
+                                </Link>
+                            </Button>
+                            <span className="text-sm text-muted-foreground">
+                                Página {commentPage} de {totalCommentPages}
+                            </span>
+                            <Button variant="outline" size="sm" asChild disabled={commentPage >= totalCommentPages}>
+                                <Link search={(prev) => ({ ...prev, commentPage: (prev.commentPage || 1) + 1 })}>
+                                    Próxima
+                                </Link>
+                            </Button>
+                        </div>
+
+                        {/* Grupo 2: Controles de Tamanho (usando Links) */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Itens:</span>
+                            <Button variant={commentSize === 5 ? 'default' : 'outline'} size="sm" asChild>
+                                <Link search={(prev) => ({ ...prev, commentPage: 1, commentSize: 5 })}>5</Link>
+                            </Button>
+                            <Button variant={commentSize === 10 ? 'default' : 'outline'} size="sm" asChild>
+                                <Link search={(prev) => ({ ...prev, commentPage: 1, commentSize: 10 })}>10</Link>
+                            </Button>
+                            <Button variant={commentSize === 15 ? 'default' : 'outline'} size="sm" asChild>
+                                <Link search={(prev) => ({ ...prev, commentPage: 1, commentSize: 15 })}>15</Link>
+                            </Button>
+                        </div>
+
+                    </div>
+                )}
             </div>
             {/* --- Fim da seção de comantários --- */}
+
+
         </div>
     )
 }
