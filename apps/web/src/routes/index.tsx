@@ -7,12 +7,25 @@ import { useAuthStore } from '@/lib/authStore'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger, } from '@/components/ui/dialog'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { RegisterForm } from '@/components/auth/RegisterForm'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { MessageSquare } from 'lucide-react'
 import { CreateTaskForm } from '@/components/tasks/CreateTaskForm'
 import type { Task } from '../../../../packages/types/TaskTypes'
-import { Pencil } from 'lucide-react'; // 1. O ícone de lápis
+import { Pencil } from 'lucide-react';
 import { UpdateTaskForm } from '@/components/tasks/UpdateTaskForm'
+import { toast } from 'sonner'
+import { Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -23,7 +36,8 @@ function HomePage() {
   const { isLoginModalOpen, closeLoginModal, user, token } = useAuthStore();
   const [view, setView] = useState<'login' | 'register'>('login');
   const [isCreateTaskOpen, setCreateTaskOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const queryClient = useQueryClient();
 
   const fetchTasks = async (): Promise<Task[]> => {
     const response = await privateClient.get('/tasks')
@@ -72,59 +86,108 @@ function HomePage() {
                     params={{ taskId: task.id }}
                     className="block p-4 border rounded-lg shadow-sm hover:bg-muted/50 transition-colors"
                   >
-                    {/* Linha 1: título + botão de edição */}
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-semibold text-lg">{task.title}</h3>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setEditingTask(task)
-                        }}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <div className="flex justify-between items-center">
+                      {/* LADO ESQUERDO */}
+                      <div className="flex-1">
+                        {/* Linha 1: título */}
+                        <h3 className="font-semibold text-lg">{task.title}</h3>
 
-                    {/* Linha 2: descrição */}
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {task.description}
-                      </p>
-                    )}
+                        {/* Linha 2: descrição */}
+                        {task.description && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {task.description}
+                          </p>
+                        )}
 
-                    {/* Linha 3: status e prioridade */}
-                    <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                      <p>Status: {task.status.toLowerCase().replace('_', ' ')}</p>
-                      <p>Prioridade: {task.priority.toLowerCase().replace('_', ' ')}</p>
-                    </div>
+                        {/* Linha 3: status e prioridade */}
+                        <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
+                          <p>Status: {task.status.toLowerCase().replace("_", " ")}</p>
+                          <p>Prioridade: {task.priority.toLowerCase().replace("_", " ")}</p>
+                        </div>
 
-                    {/* Linha 4: usuários atribuídos */}
-                    {task.assignees && task.assignees.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {task.assignees.map((user) => (
-                          <span
-                            key={user.id}
-                            className="text-xs bg-muted px-2 py-1 rounded-md"
-                          >
-                            {user.username}
-                          </span>
-                        ))}
+                        {/* Linha 4: comentários + usuários */}
+                        <div className="mt-3 flex items-center gap-3 text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="w-4 h-4" />
+                            <span className="text-sm">{task.comments.length}</span>
+                          </div>
+
+                          {task.assignees && task.assignees.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {task.assignees.map((user) => (
+                                <span
+                                  key={user.id}
+                                  className="text-xs bg-muted px-2 py-1 rounded-md"
+                                >
+                                  {user.username}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
 
-                    {/* Linha 5: comentários */}
-                    <div className="mt-3 flex items-center gap-1 text-muted-foreground">
-                      <MessageSquare className="w-4 h-4" />
-                      <span className="text-sm">{task.comments.length}</span>
+                      {/* LADO DIREITO - ÍCONES */}
+                      <div className="flex flex-col items-center justify-center gap-2 ml-4">
+                        {/* Botão de edição */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setEditingTask(task)
+                          }}
+                        >
+                          <div className="bg-blue-500 p-2 rounded-md inline-flex items-center justify-center">
+                            <Pencil className="w-4 h-4 text-white" />
+                          </div>
+
+                        </Button>
+
+                        {/* Botão de deletar */}
+                        <div
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                          }}
+                        >
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                              >
+                                <div className="bg-yellow-500 p-2 rounded-md inline-flex items-center justify-center">
+                                  <Trash2 className="w-4 h-4" />
+                                </div>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="text-slate-50">
+                              <AlertDialogFooter className="flex flex-col items-center justify-center">
+                                <AlertDialogTitle className="text-slate-50">
+                                  Você tem certeza que deseja deletar a tarefa "{task.title}"?
+                                </AlertDialogTitle>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-red-900 hover:bg-destructive/90 text-slate-50"
+                                  onClick={() => deleteMutation.mutate(task.id)}
+                                >
+                                  Sim, deletar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
                     </div>
                   </Link>
                 </li>
               ))}
             </ul>
+
           )}
         </div>
       )
@@ -132,6 +195,22 @@ function HomePage() {
 
     return null
   }
+
+  const deleteMutation = useMutation({
+    mutationFn: (taskId: string) => {
+      // Chama o endpoint DELETE
+      return privateClient.delete(`/tasks/${taskId}`)
+    },
+    onSuccess: (data, taskId) => {
+      // 3. ATUALIZA A LISTA DE TAREFAS NA TELA
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      toast.success(`Tarefa deletada com sucesso!`)
+    },
+    onError: (error) => {
+      console.error('Erro ao deletar tarefa:', error)
+      toast.error('Não foi possível deletar a tarefa.')
+    },
+  })
 
   return (
     <div className="p-4 flex flex-col items-center">
