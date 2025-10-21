@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { toast } from 'sonner'
 import { TaskPriority, TaskStatus, type Task } from '../../../../../packages/types/TaskTypes'
+import { toast } from 'sonner'
 
 
 const createTaskSchema = z.object({
@@ -46,9 +46,8 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
     mutationFn: (newTask: { title: string; description?: string; priority?: TaskPriority; status?: TaskStatus; assigneeIds?: string[] }) => {
       return privateClient.post<Task>('/tasks', newTask)
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      toast.success(`Tarefa "${data.data.title}" criada com sucesso!`)
       onSuccess?.()
     },
     onError: (error) => {

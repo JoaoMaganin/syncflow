@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { toast } from 'sonner'
 import { TaskPriority, TaskStatus, type Task } from '../../../../../packages/types/TaskTypes'
+import { toast } from 'sonner'
 
 
 const updateTaskSchema = z.object({
@@ -52,10 +52,9 @@ export function UpdateTaskForm({ task, onSuccess }: UpdateTaskFormProps) {
     mutationFn: (updatedData: { assigneeIds?: string[] } & Omit<UpdateTaskFormValues, 'assignees'>) => {
       return privateClient.put<Task>(`/tasks/${task.id}`, updatedData)
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['task', task.id] })
-      toast.success(`Tarefa "${data.data.title}" atualizada!`)
       onSuccess?.()
     },
     onError: (error) => {

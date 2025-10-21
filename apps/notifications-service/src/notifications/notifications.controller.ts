@@ -16,7 +16,7 @@ export class NotificationsController {
 
     // ENVIE O EVENTO PARA O WEBSOCKET
     // Emite um evento chamado 'new_task' para todos os clientes conectados
-    this.notificationsGateway.sendToAll('new_task', JSON.stringify(plainData, null, 2));
+    this.notificationsGateway.sendToAll('new_task', plainData);
   }
 
   @EventPattern('task_updated')
@@ -26,6 +26,6 @@ export class NotificationsController {
     const plainData = JSON.parse(JSON.stringify(data));
 
     // ENVIE O EVENTO PARA O WEBSOCKET
-    this.notificationsGateway.sendToAll('task_updated_event', JSON.stringify(plainData, null, 2));
+    this.notificationsGateway.sendToAll('task_updated_event', plainData);
   }
 }
