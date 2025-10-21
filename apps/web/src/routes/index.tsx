@@ -214,6 +214,26 @@ function HomePage() {
             </ul>
 
           )}
+
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center items-center gap-4">
+              <Button variant="outline" asChild disabled={page <= 1}>
+                <Link to="/" search={{ search, size, page: page - 1 }}>
+                  Anterior
+                </Link>
+              </Button>
+
+              <span className="text-sm text-muted-foreground">
+                Página {page} de {totalPages}
+              </span>
+
+              <Button variant="outline" asChild disabled={page >= totalPages}>
+                <Link to="/" search={{ search, size, page: page + 1 }}>
+                  Próxima
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       )
     }
@@ -226,10 +246,10 @@ function HomePage() {
       // Chama o endpoint DELETE
       return privateClient.delete(`/tasks/${taskId}`)
     },
-    onSuccess: (data, taskId) => {
+    onSuccess: (data) => {
       // 3. ATUALIZA A LISTA DE TAREFAS NA TELA
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      toast.success(`Tarefa deletada com sucesso!`)
+      toast.success(`Tarefa deletada "${data.data.title}" com sucesso!`)
     },
     onError: (error) => {
       console.error('Erro ao deletar tarefa:', error)
