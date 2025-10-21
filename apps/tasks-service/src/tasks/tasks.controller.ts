@@ -53,7 +53,12 @@ export class TasksController {
   }
 
   @MessagePattern({ cmd: 'find_comments_for_task' })
-  findCommentsByTask(@Payload() payload: { taskId: string; userId: string }) {
-    return this.tasksService.findCommentsByTask(payload.taskId, payload.userId);
+  findCommentsByTask(@Payload() payload: { taskId: string; userId: string; page?: number; size?: number }) {
+    return this.tasksService.findCommentsByTask(
+      payload.taskId,
+      payload.userId,
+      payload.page,
+      payload.size
+    );
   }
 }

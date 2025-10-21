@@ -187,21 +187,23 @@ export class TasksService {
     return this.commentRepository.save(newComment);
   }
 
-  async findCommentsByTask(taskId: string, userId: string): Promise<Comment[]> {
+  async findCommentsByTask(
+    taskId: string,
+    userId: string,
+    page: number = 1, // Valor padrão
+    size: number = 5,  // Padrão de 5 comentários por página
+  ) {
+    // Busca a tarefa pelo ID para verificar a permissão
     const task = await this.taskRepository.findOne({
       where: { id: taskId },
-      relations: {
-        assignees: true, // Precisamos dos 'assignees' para a verificação
-        comments: true,
-      },
-      order: { comments: { createdAt: 'DESC' } }
+      relations: { assignees: true }, // Só precisamos dos assignees para a verificação
     });
 
     if (!task) {
       throw new NotFoundException(`Tarefa com ID "${taskId}" não encontrada.`);
     }
 
-    // VERIFICAÇÃO DE PERMISSÃO (A LÓGICA CORRETA)
+    // VERIFICAÇÃO DE PERMISSÃO
     const isOwner = task.ownerId === userId;
     const isAssignee = task.assignees.some(user => user.id === userId);
 
@@ -209,7 +211,24 @@ export class TasksService {
       throw new ForbiddenException('Você não tem permissão para ver os comentários desta tarefa.');
     }
 
-    return task.comments;
+    // LÓGICA DE PAGINAÇÃO PARA OS COMENTÁRIOS
+    const skip = (page - 1) * size;
+    const take = size;
+
+    const [data, total] = await this.commentRepository.findAndCount({
+      where: { task: { id: taskId } }, // Filtra comentários para esta tarefa
+      order: { createdAt: 'DESC' }, // Mais recentes primeiro
+      skip: skip,
+      take: take,
+    });
+
+    return {
+      data,
+      total,
+      page,
+      size,
+      totalPages: Math.ceil(total / size),
+    };
   }
 
 

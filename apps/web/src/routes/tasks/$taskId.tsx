@@ -43,7 +43,6 @@ function TaskDetailPage() {
         enabled: !!task,
     })
 
-    // Renderização condicional (Loading, Error, Success)
     if (isTaskLoading) {
         return (
             <div className="p-4">

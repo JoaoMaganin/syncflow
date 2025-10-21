@@ -6,6 +6,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
+import { CommentQueryDto } from './dto/comment-query.dto';
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -37,8 +38,8 @@ export class TasksController {
     // 3. Envia o userId e o objeto de query completo para o tasks-service
     return this.tasksService.send(
       { cmd: 'find_all_tasks_for_user' },
-      { 
-        userId, 
+      {
+        userId,
         search: query.search,
         page: query.page,
         size: query.size,
@@ -110,11 +111,17 @@ export class TasksController {
   @Get(':id/comments')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  findComments(@Param('id') taskId: string, @Req() req: any) {
+  findComments( @Param('id') taskId: string, @Req() req: any, @Query() query: CommentQueryDto) {
     const userId = req.user.userId;
+
     return this.tasksService.send(
       { cmd: 'find_comments_for_task' },
-      { taskId, userId },
+      {
+        taskId,
+        userId,
+        page: query.page,
+        size: query.size
+      },
     );
   }
 }
