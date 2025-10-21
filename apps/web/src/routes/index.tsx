@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { privateClient } from '@/services/base'
 import { useAuthStore } from '@/lib/authStore'
@@ -20,14 +20,22 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { z } from 'zod'
+
+
+const tasksSearchSchema = z.object({
+  search: z.string().optional().default(''),
+  page: z.number().int().min(1).optional().default(1),
+  size: z.number().int().min(1).optional().default(10),
+})
 
 export const Route = createFileRoute('/')({
+  // Esta função valida e aplica os padrões da URL
+  validateSearch: (search) => tasksSearchSchema.parse(search),
   component: HomePage,
 })
 
@@ -38,20 +46,37 @@ function HomePage() {
   const [isCreateTaskOpen, setCreateTaskOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const queryClient = useQueryClient();
+  // Pega os parâmetros da url
+  const { search, page, size } = useSearch({ from: Route.id })
 
-  const fetchTasks = async (): Promise<Task[]> => {
-    const response = await privateClient.get('/tasks')
+  const fetchTasks = async (query: { search: string, page: number, size: number }) => {
+    const params = new URLSearchParams({
+      page: query.page.toString(),
+      size: query.size.toString(),
+    })
+    if (query.search) {
+      params.append('search', query.search)
+    }
+
+    // A API retorna o objeto { data: Task[], totalPages: number, ... }
+    const response = await privateClient.get(`/tasks?${params.toString()}`)
     return response.data
   }
 
-  const { data: tasks, isLoading, isError } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: fetchTasks,
-    enabled: !!token,
+  const {
+    data: queryResult,
+    isLoading,
+    isError
+  } = useQuery({
+    queryKey: ['tasks', search, page, size],
+    queryFn: () => fetchTasks({ search, page, size }),
+    enabled: !!token, // Só busca se o usuário estiver logado
   })
 
+  const tasks = queryResult?.data;
+  const totalPages = queryResult?.totalPages ?? 1
+
   const renderContent = () => {
-    // Se o usuário não estiver logado
     if (!user) {
       return (
         <p className="mt-4 text-muted-foreground">
@@ -79,7 +104,7 @@ function HomePage() {
             <p>Você ainda não tem nenhuma tarefa.</p>
           ) : (
             <ul className="space-y-4">
-              {tasks.map((task) => (
+              {tasks.map((task: Task) => (
                 <li key={task.id}>
                   <Link
                     to="/tasks/$taskId"
