@@ -215,25 +215,65 @@ function HomePage() {
 
           )}
 
-          {totalPages > 1 && (
-            <div className="mt-8 flex justify-center items-center gap-4">
-              <Button variant="outline" asChild disabled={page <= 1}>
-                <Link to="/" search={{ search, size, page: page - 1 }}>
-                  Anterior
-                </Link>
-              </Button>
+          {tasks.length > 0 && (
+            <div className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
 
-              <span className="text-sm text-muted-foreground">
-                Página {page} de {totalPages}
-              </span>
+              {/* GRUPO 1: Controles de Página (só aparece se houver mais de 1 página) */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" asChild disabled={page <= 1}>
+                    <Link to="/" search={{ search, size, page: page - 1 }}>
+                      Anterior
+                    </Link>
+                  </Button>
 
-              <Button variant="outline" asChild disabled={page >= totalPages}>
-                <Link to="/" search={{ search, size, page: page + 1 }}>
-                  Próxima
-                </Link>
-              </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Página {page} de {totalPages}
+                  </span>
+
+                  <Button variant="outline" asChild disabled={page >= totalPages}>
+                    <Link to="/" search={{ search, size, page: page + 1 }}>
+                      Próxima
+                    </Link>
+                  </Button>
+                </div>
+              )}
+
+              {/* GRUPO 2: Controles de Tamanho (usando Links) */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Itens por página:</span>
+
+                {/* Botão para 5 itens */}
+                <Button
+                  variant={size === 5 ? 'default' : 'outline'}
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/" search={{ search, page: 1, size: 5 }}>5</Link>
+                </Button>
+
+                {/* Botão para 10 itens */}
+                <Button
+                  variant={size === 10 ? 'default' : 'outline'}
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/" search={{ search, page: 1, size: 10 }}>10</Link>
+                </Button>
+
+                {/* Botão para 15 itens */}
+                <Button
+                  variant={size === 15 ? 'default' : 'outline'}
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/" search={{ search, page: 1, size: 15 }}>15</Link>
+                </Button>
+              </div>
+
             </div>
           )}
+          
         </div>
       )
     }
