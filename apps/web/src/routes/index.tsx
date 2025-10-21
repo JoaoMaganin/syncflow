@@ -28,9 +28,9 @@ import { z } from 'zod'
 
 
 const tasksSearchSchema = z.object({
-  search: z.string().optional().default(''),
-  page: z.number().int().min(1).optional().default(1),
-  size: z.number().int().min(1).optional().default(10),
+  search: z.string().optional(),
+  page: z.number().int().min(1).optional(),
+  size: z.number().int().min(1).optional(),
 })
 
 export const Route = createFileRoute('/')({
@@ -47,12 +47,16 @@ function HomePage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const queryClient = useQueryClient();
   // Pega os parâmetros da url
-  const { search, page, size } = useSearch({ from: Route.id })
+  const { search: urlSearch, page: urlPage, size: urlSize } = useSearch({ from: Route.id });
+
+  const search = urlSearch || '';
+  const page = urlPage || 1;
+  const size = urlSize || 10;
 
   const fetchTasks = async (query: { search: string, page: number, size: number }) => {
     const params = new URLSearchParams({
-      page: query.page.toString(),
-      size: query.size.toString(),
+      page: query.page.toString(), // Isso agora é seguro
+      size: query.size.toString(), // Isso agora é seguro
     })
     if (query.search) {
       params.append('search', query.search)
@@ -63,14 +67,14 @@ function HomePage() {
     return response.data
   }
 
-  const {
-    data: queryResult,
-    isLoading,
-    isError
+  const { 
+    data: queryResult, 
+    isLoading, 
+    isError 
   } = useQuery({
     queryKey: ['tasks', search, page, size],
     queryFn: () => fetchTasks({ search, page, size }),
-    enabled: !!token, // Só busca se o usuário estiver logado
+    enabled: !!token,
   })
 
   const tasks = queryResult?.data;
@@ -215,7 +219,7 @@ function HomePage() {
 
           )}
 
-          {tasks.length > 0 && (
+          {tasks.length > 0 && search!='' && (
             <div className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
 
               {/* GRUPO 1: Controles de Página (só aparece se houver mais de 1 página) */}
@@ -273,7 +277,7 @@ function HomePage() {
 
             </div>
           )}
-          
+
         </div>
       )
     }

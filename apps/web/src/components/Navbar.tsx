@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { LoginForm } from "@/components/auth/LoginForm"
 import { RegisterForm } from "@/components/auth/RegisterForm"
 import { useAuthStore } from "@/lib/authStore"
-import { useNavigate } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { Input } from "./ui/input"
 import { Search } from "lucide-react"
 
@@ -31,7 +31,9 @@ export function Navbar() {
 
     return (
         <nav className="w-full flex justify-between items-center p-4 bg-stone-950 shadow-md">
-            <div className="text-xl font-bold text-slate-50">SyncFlow</div>
+            <Link to="/" className="text-xl font-bold text-slate-50">
+                SyncFlow
+            </Link>
 
             {user && ( // Só mostra a busca se o usuário estiver logado
                 <form onSubmit={handleSearchSubmit} className="flex-grow max-w-md flex gap-2 text-slate-50">
