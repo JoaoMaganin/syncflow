@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
@@ -6,6 +6,7 @@ import { Comment } from './entities/comment.entity';
 import { User } from './entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class TasksService {
@@ -18,6 +19,8 @@ export class TasksService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @Inject('TASKS_EVENTS_SERVICE') private readonly rabbitClient: ClientProxy,
   ) { }
 
   /**
@@ -62,7 +65,12 @@ export class TasksService {
       assignees, // Passa o array de entidades User para o TypeORM
     });
 
-    return this.taskRepository.save(task);
+    const savedTask = await this.taskRepository.save(task)
+
+    // Envia o evento para o RabbitMQ
+    this.rabbitClient.emit('task_created', savedTask);
+
+    return savedTask;
   }
 
   async findAllTasksByUserId(
@@ -156,7 +164,11 @@ export class TasksService {
         .of(task)
         .addAndRemove(newAssignees, oldAssignees);
     }
-    return this.findTaskById(id, ownerId);
+
+    const savedTask = await this.taskRepository.save(task);
+    this.rabbitClient.emit('task_updated', savedTask);
+
+    return savedTask;
   }
 
 
