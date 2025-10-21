@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { privateClient } from '@/services/base'
 import type { Task, Comment } from '../../../../../packages/types/TaskTypes'
+import { CreateCommentForm } from '@/components/tasks/CreateCommentForm'
 
 // A rota é inferida do nome do arquivo
 export const Route = createFileRoute('/tasks/$taskId')({
@@ -12,7 +13,7 @@ function TaskDetailPage() {
     // 1. Pegamos o 'taskId' da URL usando o hook do TanStack Router
     const { taskId } = Route.useParams()
 
-    // --- Query 1: Buscar os dados da Tarefa (você já tem isso) ---
+    // --- Query 1: Buscar os dados da Tarefa ---
     const {
         data: task,
         isLoading: isTaskLoading,
@@ -29,7 +30,7 @@ function TaskDetailPage() {
     const {
         data: comments,
         isLoading: isCommentsLoading,
-        //isError: isCommentsError
+        isError: isCommentsError
     } = useQuery({
         // A chave é única para os comentários DESTA tarefa
         queryKey: ['comments', taskId],
@@ -105,17 +106,24 @@ function TaskDetailPage() {
 
             <h2 className="text-2xl font-bold mb-4">Comentários</h2>
 
-            {/* --- SEÇÃO DE RENDERIZAÇÃO DOS COMENTÁRIOS --- */}
+            {/* --- Formulário de comentário --- */}
+            <div className="mb-6">
+                <CreateCommentForm taskId={taskId} />
+            </div>
+            {/* --- Fim do formulário --- */}
+
+            {/* --- Seção de comentários --- */}
             <div>
+
                 {/* Mostra "Carregando..." enquanto busca os comentários */}
                 {isCommentsLoading && (
                     <p className="text-muted-foreground">Carregando comentários...</p>
                 )}
 
                 {/* Mostra uma mensagem de erro se a busca de comentários falhar */}
-                {/* {isCommentsError && (
+                {isCommentsError && (
                     <p className="text-destructive">Erro ao carregar os comentários.</p>
-                )} */}
+                )}
 
                 {/* Se a busca for bem-sucedida... */}
                 {comments && (
@@ -137,7 +145,7 @@ function TaskDetailPage() {
                     </div>
                 )}
             </div>
-            {/* --- FIM DA SEÇÃO DE COMENTÁRIOS --- */}
+            {/* --- Fim da seção de comantários --- */}
         </div>
     )
 }

@@ -161,15 +161,25 @@ export class TasksService {
   }
 
   async findCommentsByTask(taskId: string, userId: string): Promise<Comment[]> {
-    // Busca a tarefa e, se ela pertencer ao usuário, já carrega os comentários junto.
     const task = await this.taskRepository.findOne({
-      where: { id: taskId, ownerId: userId },
-      relations: ['comments'], // Diz ao TypeORM para "juntar" os comentários
-      order: { comments: { createdAt: 'DESC' } } // Ordena os comentários do mais novo para o mais antigo
+      where: { id: taskId },
+      relations: {
+        assignees: true, // Precisamos dos 'assignees' para a verificação
+        comments: true,
+      },
+      order: { comments: { createdAt: 'DESC' } }
     });
 
     if (!task) {
-      throw new NotFoundException(`Tarefa com ID "${taskId}" não encontrada ou você não tem permissão para vê-la.`);
+      throw new NotFoundException(`Tarefa com ID "${taskId}" não encontrada.`);
+    }
+
+    // VERIFICAÇÃO DE PERMISSÃO (A LÓGICA CORRETA)
+    const isOwner = task.ownerId === userId;
+    const isAssignee = task.assignees.some(user => user.id === userId);
+
+    if (!isOwner && !isAssignee) {
+      throw new ForbiddenException('Você não tem permissão para ver os comentários desta tarefa.');
     }
 
     return task.comments;
