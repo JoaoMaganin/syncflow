@@ -110,28 +110,36 @@ export class TasksService {
   }
 
   async updateTask(id: string, ownerId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
+    // 1. Separa os 'assigneeIds' do resto dos dados.
     const { assigneeIds, ...taskData } = updateTaskDto;
 
-    // Busca a tarefa para garantir que ela existe e pertence ao usuário.
+    // 2. Busca a tarefa e suas relações atuais.
     const task = await this.findTaskById(id, ownerId);
 
-    // Se o DTO de atualização incluiu uma nova lista de 'assigneeIds',
-    // vamos processá-la.
-    if (assigneeIds) {
-      if (assigneeIds.length > 0) {
-        task.assignees = await this.preloadAssignees(assigneeIds);
-      } else {
-        // Se foi enviado um array vazio, removemos todas as atribuições.
-        task.assignees = [];
-      }
+    // 3. Atualiza dados simples (title, description, status, priority, etc.)
+    if (Object.keys(taskData).length > 0) {
+      this.taskRepository.merge(task, taskData);
+      await this.taskRepository.save(task);
     }
 
-    // Mescla os outros dados (title, description, etc.)
-    const updatedTask = this.taskRepository.merge(task, taskData);
+    // 4. Atualiza explicitamente a relação Many-to-Many (assignees)
+    if (Object.prototype.hasOwnProperty.call(updateTaskDto, 'assigneeIds')) {
+      const assigneeIdsArray = assigneeIds ?? [];
+      const newAssignees =
+        assigneeIdsArray.length > 0 ? await this.preloadAssignees(assigneeIdsArray) : [];
+      const oldAssignees = task.assignees || [];
 
-    // Salva a entidade completa. O TypeORM vai ATUALIZAR a tabela de junção.
-    return this.taskRepository.save(updatedTask);
+      await this.taskRepository
+        .createQueryBuilder()
+        .relation(Task, 'assignees')
+        .of(task)
+        .addAndRemove(newAssignees, oldAssignees);
+    }
+
+    // 5. Retorna a tarefa totalmente atualizada, já com as novas relações
+    return this.findTaskById(id, ownerId);
   }
+
 
   async deleteTask(id: string, ownerId: string): Promise<Task> {
     const task = await this.findTaskById(id, ownerId);

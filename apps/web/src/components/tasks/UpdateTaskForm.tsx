@@ -18,6 +18,7 @@ const updateTaskSchema = z.object({
   description: z.string().optional(),
   priority: z.nativeEnum(TaskPriority).optional(),
   status: z.nativeEnum(TaskStatus).optional(),
+  assignees: z.string().optional(),
 })
 
 type UpdateTaskFormValues = z.infer<typeof updateTaskSchema>
@@ -40,6 +41,7 @@ export function UpdateTaskForm({ task, onSuccess }: UpdateTaskFormProps) {
         description: task.description || '',
         priority: task.priority,
         status: task.status,
+        assignees: task.assignees.map(u => u.id).join(', '),
       });
     }
   }, [task, form]);
@@ -47,17 +49,14 @@ export function UpdateTaskForm({ task, onSuccess }: UpdateTaskFormProps) {
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: (updatedTask: UpdateTaskFormValues) => {
-      return privateClient.put<Task>(`/tasks/${task.id}`, updatedTask)
+    mutationFn: (updatedData: { assigneeIds?: string[] } & Omit<UpdateTaskFormValues, 'assignees'>) => {
+      return privateClient.put<Task>(`/tasks/${task.id}`, updatedData)
     },
     onSuccess: (data) => {
-      // Invalida a query 'tasks' (a lista principal)
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      // Invalida a query desta tarefa específica (se já a visitamos)
       queryClient.invalidateQueries({ queryKey: ['task', task.id] })
-
       toast.success(`Tarefa "${data.data.title}" atualizada!`)
-      onSuccess?.() // Fecha o modal
+      onSuccess?.()
     },
     onError: (error) => {
       console.error('Erro ao atualizar tarefa:', error)
@@ -111,6 +110,18 @@ export function UpdateTaskForm({ task, onSuccess }: UpdateTaskFormProps) {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="assignees">Atribuir Usuários (IDs separados por vírgula)</Label>
+        <Textarea
+          id="assignees"
+          placeholder="Cole os IDs dos usuários aqui..."
+          {...form.register('assignees')}
+        />
+        <p className="text-xs text-muted-foreground">
+          Deixe vazio para remover todos os atribuídos.
+        </p>
       </div>
 
       <Button type="submit" className="w-full mt-4" disabled={mutation.isPending}>
