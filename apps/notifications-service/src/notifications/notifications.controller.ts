@@ -28,4 +28,15 @@ export class NotificationsController {
     // ENVIE O EVENTO PARA O WEBSOCKET
     this.notificationsGateway.sendToAll('task_updated_event', plainData);
   }
+
+  @EventPattern('comment_created')
+  handleCommentCreated(@Payload() data: any) {
+    console.log('--- NOTIFICATIONS-SERVICE: Evento [comment_created] recebido! ---');
+
+    // Converte para um objeto JSON puro
+    const plainData = JSON.parse(JSON.stringify(data));
+
+    // Transmite um evento WebSocket chamado 'new_comment'
+    this.notificationsGateway.sendToAll('new_comment', plainData);
+  }
 }

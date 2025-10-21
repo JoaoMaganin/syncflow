@@ -196,7 +196,11 @@ export class TasksService {
       task, // O TypeORM é inteligente o suficiente para associar a tarefa aqui
     });
 
-    return this.commentRepository.save(newComment);
+    const savedComment = await this.commentRepository.save(newComment);
+
+    this.rabbitClient.emit('comment_created', savedComment);
+
+    return savedComment;
   }
 
   async findCommentsByTask(

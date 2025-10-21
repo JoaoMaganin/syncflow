@@ -14,11 +14,11 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
-  // 2. PEGUE O TOKEN DO STORE
+  // PEGUE O TOKEN DO STORE
   const { token } = useAuthStore()
   const queryClient = useQueryClient()
 
-  // 3. ESTE É O "CÉREBRO" DO NOSSO RÁDIO
+  // ESTE É O "CÉREBRO"
   useEffect(() => {
     // Se o usuário está logado (tem um token)
     if (token) {
@@ -42,6 +42,25 @@ function RootComponent() {
         queryClient.invalidateQueries({ queryKey: ['tasks'] });
         // (Também invalide a query do detalhe, se estiver nela)
         queryClient.invalidateQueries({ queryKey: ['task', data.id] });
+      });
+
+      // Sintoniza na estação 'new_comment'
+      socket.on('new_comment', (data: any) => {
+        console.log('Recebido evento [new_comment]:', data)
+
+        // Mostra um toast informando sobre o novo comentário
+        toast.info(
+          `Novo comentário de "${data.authorUsername}" na tarefa: "${data.task.title}"`
+        );
+
+        // Isso fará a lista de comentários na página de detalhes recarregar
+        queryClient.invalidateQueries({ queryKey: ['comments', data.task.id] });
+
+        // Invalida a query da tarefa (para atualizar a contagem de comentários)
+        queryClient.invalidateQueries({ queryKey: ['task', data.task.id] });
+
+        // Invalida a query da lista de tarefas (para atualizar a contagem na home)
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
       });
 
       // Sintoniza no evento de conexão
