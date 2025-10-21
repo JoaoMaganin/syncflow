@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { Comment } from './entities/comment.entity';
 import { User } from './entities/user.entity';
@@ -65,24 +65,49 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
-  async findAllTasksByUserId(ownerId: string): Promise<Task[]> {
-    // O TypeORM permite passar um array para o 'where',
-    // que funciona como uma cláusula 'OR'.
-    return this.taskRepository.find({
-      where: [
-        // Encontra tarefas onde o usuário é o criador
-        { ownerId: ownerId },
+  async findAllTasksByUserId(
+    userId: string,
+    page: number = 1, // Valor padrão
+    size: number = 10, // Valor padrão
+    search?: string,
+  ) {
+    // Calcula os parâmetros de paginação
+    const skip = (page - 1) * size; // Pular (ex: página 2, size 10 -> pular 10)
+    const take = size; // Pegar (ex: 10 itens)
 
-        // OU encontra tarefas onde o ID do usuário está na lista de 'assignees'
-        { assignees: { id: ownerId } }
-      ],
-      // Também carregamos as relações para que o front-end saiba quem são os criadores e atribuídos
+    // Cria a condição de busca (WHERE ... LIKE ...)
+    // Se 'search' foi fornecido, cria um objeto de condição para o título
+    const searchCondition = search ? { title: ILike(`%${search}%`) } : {};
+
+    // Cria as condições de permissão (WHERE ... OR ...)
+    // "Onde o usuário é o dono E o título bate com a busca"
+    // "OU onde o usuário é um assignee E o título bate com a busca"
+    const whereConditions = [
+      { ownerId: userId, ...searchCondition },
+      { assignees: { id: userId }, ...searchCondition },
+    ];
+
+    // Executa a query com findAndCount
+    // Isso é super eficiente: faz duas queries em uma (busca os dados E conta o total)
+    const [data, total] = await this.taskRepository.findAndCount({
+      where: whereConditions,
       relations: {
         assignees: true,
         comments: true,
       },
-      order: { createdAt: 'DESC' }, // Ordena da mais recente para a mais antiga
+      order: { createdAt: 'DESC' },
+      skip: skip,
+      take: take,
     });
+
+    // Retorna os dados em um formato amigável para paginação
+    return {
+      data,        // Os itens da página atual
+      total,       // O número total de itens que correspondem à busca
+      page,        // A página atual
+      size,        // O tamanho da página
+      totalPages: Math.ceil(total / size), // O número total de páginas
+    };
   }
 
   async findTaskById(id: string, userId: string): Promise<Task> {
@@ -110,19 +135,15 @@ export class TasksService {
   }
 
   async updateTask(id: string, ownerId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    // 1. Separa os 'assigneeIds' do resto dos dados.
     const { assigneeIds, ...taskData } = updateTaskDto;
 
-    // 2. Busca a tarefa e suas relações atuais.
     const task = await this.findTaskById(id, ownerId);
 
-    // 3. Atualiza dados simples (title, description, status, priority, etc.)
     if (Object.keys(taskData).length > 0) {
       this.taskRepository.merge(task, taskData);
       await this.taskRepository.save(task);
     }
 
-    // 4. Atualiza explicitamente a relação Many-to-Many (assignees)
     if (Object.prototype.hasOwnProperty.call(updateTaskDto, 'assigneeIds')) {
       const assigneeIdsArray = assigneeIds ?? [];
       const newAssignees =
@@ -135,8 +156,6 @@ export class TasksService {
         .of(task)
         .addAndRemove(newAssignees, oldAssignees);
     }
-
-    // 5. Retorna a tarefa totalmente atualizada, já com as novas relações
     return this.findTaskById(id, ownerId);
   }
 

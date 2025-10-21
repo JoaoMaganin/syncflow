@@ -13,7 +13,9 @@ async function bootstrap() {
     credentials: true,               // permite envio de cookies/tokens
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true, // Diz ao Pipe para transformar os dados para os tipos do DTO
+  }));
 
   // Configuração do Swagger
   const config = new DocumentBuilder()

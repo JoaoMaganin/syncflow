@@ -15,9 +15,15 @@ export class TasksController {
     return this.tasksService.createTask(payload.createTaskDto, payload.ownerId, payload.ownerUsername);
   }
 
-  @MessagePattern({ cmd: 'find_all_tasks_by_user' })
-  findAllByOwner(@Payload() payload: { ownerId: string }) {
-    return this.tasksService.findAllTasksByUserId(payload.ownerId);
+  @MessagePattern({ cmd: 'find_all_tasks_for_user' })
+  findAllForUser(@Payload() payload: { userId: string; page?: number; size?: number; search?: string }) {
+    // Repassa todos os parâmetros para o serviço
+    return this.tasksService.findAllTasksByUserId(
+      payload.userId,
+      payload.page,
+      payload.size,
+      payload.search,
+    );
   }
 
   @MessagePattern({ cmd: 'find_task_by_id' })

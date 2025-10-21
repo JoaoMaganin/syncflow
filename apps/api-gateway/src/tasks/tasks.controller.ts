@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { TaskQueryDto } from './dto/task-query.dto';
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -27,16 +28,21 @@ export class TasksController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt')) // A rota é protegida!
+  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  findAllTasks(@Req() req: any) {
-    // Extrai o ID do usuário do token (injetado pelo JwtAuthGuard)
-    const ownerId = req.user.userId;
+  findAllTasks(@Req() req: any, @Query() query: TaskQueryDto) {
+    // Extrai o ID do usuário do token
+    const userId = req.user.userId;
 
-    // Envia o comando para o tasks-service
+    // 3. Envia o userId e o objeto de query completo para o tasks-service
     return this.tasksService.send(
-      { cmd: 'find_all_tasks_by_user' },
-      { ownerId },
+      { cmd: 'find_all_tasks_for_user' },
+      { 
+        userId, 
+        search: query.search,
+        page: query.page,
+        size: query.size,
+      },
     );
   }
 
