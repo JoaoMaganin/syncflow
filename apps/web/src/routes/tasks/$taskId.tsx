@@ -1,20 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { privateClient } from '@/services/base'
-import type { Task } from '..'
+import type { Task, Comment } from '../../../../../packages/types/TaskTypes'
 
 // A rota é inferida do nome do arquivo
 export const Route = createFileRoute('/tasks/$taskId')({
     component: TaskDetailPage,
 })
-
-export interface Comment {
-    id: string;
-    content: string;
-    authorId: string;
-    authorUsername: string;
-    createdAt: string;
-}
 
 function TaskDetailPage() {
     // 1. Pegamos o 'taskId' da URL usando o hook do TanStack Router

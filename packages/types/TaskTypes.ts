@@ -15,6 +15,14 @@ export const TaskPriority = {
 export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
 export type TaskPriority = (typeof TaskPriority)[keyof typeof TaskPriority];
 
+export interface Comment {
+  id: string;
+  content: string;
+  authorId: string;
+  authorUsername: string;
+  createdAt: string;
+}
+
 export interface Task {
   id: string;
   title: string;

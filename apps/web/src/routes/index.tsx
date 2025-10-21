@@ -10,31 +10,20 @@ import { RegisterForm } from '@/components/auth/RegisterForm'
 import { useQuery } from '@tanstack/react-query'
 import { MessageSquare } from 'lucide-react'
 import { CreateTaskForm } from '@/components/tasks/CreateTaskForm'
-import type { TaskPriority, TaskStatus } from '../../../../packages/types/TaskTypes'
+import type { Task } from '../../../../packages/types/TaskTypes'
+import { Pencil } from 'lucide-react'; // 1. O ícone de lápis
+import { UpdateTaskForm } from '@/components/tasks/UpdateTaskForm'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
-
-export interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  priority: TaskPriority;
-  status: TaskStatus;
-  ownerId: string;
-  ownerUsername: string;
-  createdAt: string;
-  updatedAt: string;
-  assignees: { id: string, username: string }[];
-  comments: { id: string }[];
-}
 
 function HomePage() {
   // Pegue o estado e as ações do modal do nosso store global
   const { isLoginModalOpen, closeLoginModal, user, token } = useAuthStore();
   const [view, setView] = useState<'login' | 'register'>('login');
   const [isCreateTaskOpen, setCreateTaskOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const fetchTasks = async (): Promise<Task[]> => {
     const response = await privateClient.get('/tasks')
@@ -83,16 +72,54 @@ function HomePage() {
                     params={{ taskId: task.id }}
                     className="block p-4 border rounded-lg shadow-sm hover:bg-muted/50 transition-colors"
                   >
-                    {/* O conteúdo é o mesmo de antes */}
-                    <h3 className="font-semibold text-lg">{task.title}</h3>
-                    <div className="flex justify-between items-center mt-2">
-                      <p className="text-sm text-muted-foreground capitalize">
-                        {task.status.toLowerCase().replace('_', ' ')}
+                    {/* Linha 1: título + botão de edição */}
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold text-lg">{task.title}</h3>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setEditingTask(task)
+                        }}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    {/* Linha 2: descrição */}
+                    {task.description && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {task.description}
                       </p>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <MessageSquare className="w-4 h-4" />
-                        <span className="text-sm">{task.comments.length}</span>
+                    )}
+
+                    {/* Linha 3: status e prioridade */}
+                    <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
+                      <p>Status: {task.status.toLowerCase().replace('_', ' ')}</p>
+                      <p>Prioridade: {task.priority.toLowerCase().replace('_', ' ')}</p>
+                    </div>
+
+                    {/* Linha 4: usuários atribuídos */}
+                    {task.assignees && task.assignees.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {task.assignees.map((user) => (
+                          <span
+                            key={user.id}
+                            className="text-xs bg-muted px-2 py-1 rounded-md"
+                          >
+                            {user.username}
+                          </span>
+                        ))}
                       </div>
+                    )}
+
+                    {/* Linha 5: comentários */}
+                    <div className="mt-3 flex items-center gap-1 text-muted-foreground">
+                      <MessageSquare className="w-4 h-4" />
+                      <span className="text-sm">{task.comments.length}</span>
                     </div>
                   </Link>
                 </li>
@@ -133,6 +160,30 @@ function HomePage() {
           Testar Rota Protegida (/profile)
         </Button>
       </AuthWall> */}
+
+      {/* --- 6. ADICIONE O NOVO MODAL DE EDIÇÃO AQUI --- */}
+      <Dialog
+        open={!!editingTask} // O modal abre se 'editingTask' não for nulo
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setEditingTask(null) // Fecha o modal e limpa o estado
+          }
+        }}
+      >
+        <DialogContent className="text-slate-50">
+          <DialogHeader>
+            <DialogTitle>Editar Tarefa</DialogTitle>
+          </DialogHeader>
+          {/* Se a tarefa existir, renderiza o formulário e passa a tarefa para ele */}
+          {editingTask && (
+            <UpdateTaskForm
+              task={editingTask}
+              onSuccess={() => setEditingTask(null)} // Fecha o modal em caso de sucesso
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      {/* --- FIM DO MODAL DE EDIÇÃO --- */}
 
       {/* Adicione o Modal, controlado pelo Zustand */}
       <Dialog open={isLoginModalOpen} onOpenChange={closeLoginModal}>
