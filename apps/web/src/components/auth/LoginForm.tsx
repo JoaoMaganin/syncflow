@@ -48,7 +48,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       onSuccess?.();
     } catch (err: any) {
       console.error('Erro ao fazer login:', err);
-      toast.error('Erro ao realizar login. Verifique suas credenciais.');
+      toast.error('Erro ao realizar login. Email ou senha incorretos.');
     }
   }
 

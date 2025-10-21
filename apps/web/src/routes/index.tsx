@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { z } from 'zod'
+import { TaskCardSkeleton } from './tasks/TaskCardSkeleton'
 
 
 const tasksSearchSchema = z.object({
@@ -67,10 +68,10 @@ function HomePage() {
     return response.data
   }
 
-  const { 
-    data: queryResult, 
-    isLoading, 
-    isError 
+  const {
+    data: queryResult,
+    isLoading,
+    isError
   } = useQuery({
     queryKey: ['tasks', search, page, size],
     queryFn: () => fetchTasks({ search, page, size }),
@@ -91,7 +92,11 @@ function HomePage() {
 
     // Se estiver logado e carregando
     if (isLoading) {
-      return <p className="mt-4 text-muted-foreground">Carregando tarefas...</p>
+      <div className="mt-8 w-full max-w-2xl space-y-4">
+        <TaskCardSkeleton />
+        <TaskCardSkeleton />
+        <TaskCardSkeleton />
+      </div>
       // TODO: Substituir por um Skeleton Loader
     }
 
@@ -219,7 +224,7 @@ function HomePage() {
 
           )}
 
-          {tasks.length > 0 && search!='' && (
+          {tasks.length > 0 && search != '' && (
             <div className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
 
               {/* GRUPO 1: Controles de Página (só aparece se houver mais de 1 página) */}
