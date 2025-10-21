@@ -19,10 +19,14 @@ import { TasksService } from './tasks.service';
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ, // Define o transporte como RabbitMQ
           options: {
-            urls: [configService.get<string>('RABBITMQ_URL') as string],
+            urls: [configService.get('RABBITMQ_URL')],
             queue: 'tasks_queue', // O nome da "caixa de correio" principal
             queueOptions: {
               durable: true, // Garante que a fila sobreviva a reinicializações
+            },
+            socketOptions: {
+              heartbeatIntervalInSeconds: 10,
+              reconnectTimeInSeconds: 5,
             },
           },
         }),
@@ -32,4 +36,4 @@ import { TasksService } from './tasks.service';
   controllers: [TasksController],
   providers: [TasksService],
 })
-export class TasksModule {}
+export class TasksModule { }
