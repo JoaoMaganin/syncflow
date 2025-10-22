@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { authService } from '@/services/auth.service'
 import { useAuthStore } from '@/lib/authStore' // 1. Trocamos o useAuth pelo nosso store
+import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 
 const registerSchema = z.object({
   username: z.string().min(3, { message: "O nome de usuário deve ter pelo menos 3 caracteres." }),
@@ -26,6 +28,9 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
@@ -44,7 +49,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       // Passo 2: Logar o usuário automaticamente com as mesmas credenciais
       const loginResponse = await authService.login({ email, password });
       const { accessToken, user } = loginResponse;
-      
+
       // Passo 3: Mapear os dados para o formato do nosso store
       const userForStore = {
         userId: user.id,
@@ -54,7 +59,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       // Passo 4: Atualizar o estado global, o que vai atualizar a Navbar
       setAuthState(userForStore, accessToken);
       console.log('Logado no sistema ao registrar.');
-      
+
       // Passo 5: Chamar a função de sucesso para fechar o modal
       onSuccess?.()
     } catch (error: any) {
@@ -80,29 +85,73 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
         )}
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="password">Senha</Label>
-        <Input id="password" type="password" placeholder="Digite sua senha" {...form.register('password')} />
+
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            className="pr-10"
+            {...form.register('password')}
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+
         {form.formState.errors.password && (
-          <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-        )}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          placeholder="Confirme sua senha"
-          {...form.register("confirmPassword")}
-        />
-        {form.formState.errors.confirmPassword && (
           <p className="text-sm text-destructive">
-            {form.formState.errors.confirmPassword.message}
+            {form.formState.errors.password.message}
           </p>
         )}
       </div>
-      <Button 
-        type="submit" 
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Senha</Label>
+
+        <div className="relative">
+          <Input
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="••••••••"
+            className="pr-10"
+            {...form.register('confirmPassword')}
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+          >
+            {showConfirmPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+
+        {form.formState.errors.confirmPassword  && (
+          <p className="text-sm text-destructive">
+            {form.formState.errors.confirmPassword .message}
+          </p>
+        )}
+      </div>
+
+      <Button
+        type="submit"
         className="w-full"
         disabled={form.formState.isSubmitting}
       >

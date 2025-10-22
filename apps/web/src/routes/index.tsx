@@ -112,7 +112,7 @@ function HomePage() {
     }
 
     if (!tasks || tasks.length === 0) {
-      return <p className="mt-4">Você ainda não tem nenhuma tarefa.</p>
+      return <p className="mt-4 text-center">Você ainda não tem nenhuma tarefa.</p>
     }
 
     // ---------------------------
