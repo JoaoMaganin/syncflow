@@ -35,7 +35,6 @@ export function CreateCommentForm({ taskId }: CreateCommentFormProps) {
             queryClient.invalidateQueries({ queryKey: ['comments', taskId] })
             queryClient.invalidateQueries({ queryKey: ['task', taskId] })
 
-            toast.success("Comentário adicionado com sucesso!")
             form.reset() // Limpa o formulário
         },
         onError: (error) => {

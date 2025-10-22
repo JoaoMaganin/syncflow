@@ -52,8 +52,8 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
                         )}
 
                         <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                            <p>Status: {task.status?.toLowerCase().replace("_", " ") || 'Não listado'}</p>
-                            <p>Prioridade: {task.priority?.toLowerCase().replace("_", " ") || '—'}</p>
+                            <p><b>Status:</b> {task.status?.toLowerCase().replace("_", " ") || 'Não listado'}</p>
+                            <p><b>Prioridade:</b> {task.priority?.toLowerCase().replace("_", " ") || '—'}</p>
                         </div>
 
                         <div className="mt-3 flex items-center gap-3 text-muted-foreground">

@@ -31,7 +31,7 @@ export function Navbar() {
     }
 
     return (
-        <nav className="w-full flex justify-between items-center p-4 bg-stone-950 shadow-md">
+        <nav className="w-full flex justify-between items-center p-4 bg-slate-950">
             <Link
                 to="/"
                 className="
