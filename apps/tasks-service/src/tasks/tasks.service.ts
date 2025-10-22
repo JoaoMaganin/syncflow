@@ -7,6 +7,7 @@ import { User } from './entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ClientProxy } from '@nestjs/microservices';
+import { TaskHistory } from './entities/task-history.entity';
 
 @Injectable()
 export class TasksService {
@@ -20,8 +21,32 @@ export class TasksService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
 
+    @InjectRepository(TaskHistory)
+    private readonly taskHistoryRepository: Repository<TaskHistory>,
+
     @Inject('TASKS_EVENTS_SERVICE') private readonly rabbitClient: ClientProxy,
   ) { }
+
+  // Funções de audit log
+  private async createAuditLog(
+    task: Task,
+    userId: string,
+    username: string,
+    action: string,
+    oldValue?: string | null,
+    newValue?: string | null,
+  ) {
+    const historyLog = this.taskHistoryRepository.create({
+      task,
+      userId,
+      username,
+      action,
+      oldValue: oldValue || null,
+      newValue: newValue || null,
+    });
+    await this.taskHistoryRepository.save(historyLog);
+  }
+
 
   /**
    * Método helper para VERIFICAR E CARREGAR entidades "espelho" de usuários.
@@ -66,6 +91,16 @@ export class TasksService {
     });
 
     const savedTask = await this.taskRepository.save(task)
+
+    // log de auditoria
+    await this.createAuditLog(
+      savedTask,
+      ownerId,
+      ownerUsername,
+      'TASK_CREATED', // Ação
+      null,
+      savedTask.title, // Salva o título da tarefa como 'newValue'
+    );
 
     // Envia o evento para o RabbitMQ
     this.rabbitClient.emit('task_created', savedTask);
@@ -142,47 +177,144 @@ export class TasksService {
     return task;
   }
 
+  // async updateTask(id: string, ownerId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
+
+  //   const { assigneeIds, ...taskData } = updateTaskDto;
+
+  //   const task = await this.findTaskById(id, ownerId);
+
+  //   // Mescla e SALVA os dados simples (title, description, status, etc.)
+  //   // Isso atualiza a tabela 'tasks'.
+  //   if (Object.keys(taskData).length > 0) {
+  //     this.taskRepository.merge(task, taskData);
+  //     await this.taskRepository.save(task);
+  //   }
+
+  //   // Verificamos se 'assigneeIds' foi realmente enviado no DTO.
+  //   if (Object.prototype.hasOwnProperty.call(updateTaskDto, 'assigneeIds')) {
+  //     let newAssignees: User[] = [];
+  //     if (assigneeIds && assigneeIds.length > 0) {
+  //       // Busca as entidades User para os novos IDs
+  //       newAssignees = await this.preloadAssignees(assigneeIds);
+  //     }
+
+  //     // 'task.assignees' aqui contém a lista ANTIGA de assignees (carregada pelo findOneById).
+  //     const oldAssignees = task.assignees || [];
+
+  //     // O RelationQueryBuilder é a forma 100% correta de atualizar uma ManyToMany.
+  //     // Ele calcula a diferença (diff) e faz os INSERTS/DELETES necessários na tabela de junção.
+  //     await this.taskRepository
+  //       .createQueryBuilder()
+  //       .relation(Task, 'assignees') // Queremos modificar a relação 'assignees' da entidade Task
+  //       .of(task) // Para esta 'task' específica
+  //       .addAndRemove(newAssignees, oldAssignees); // Substitui a lista antiga pela nova
+  //   }
+
+  //   // Busca a tarefa novamente para garantir que temos os dados mais recentes
+  //   // (com as relações atualizadas) para enviar ao RabbitMQ.
+  //   const updatedTask = await this.findTaskById(id, ownerId);
+
+  //   this.rabbitClient.emit('task_updated', updatedTask);
+
+  //   return updatedTask;
+  // }
+
   async updateTask(id: string, ownerId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
+    const { assigneeIds, ...taskData } = updateTaskDto;
 
-   const { assigneeIds, ...taskData } = updateTaskDto;
+    // Buscamos a tarefa ANTIGA, incluindo suas relações
+    const taskBeforeUpdate = await this.findTaskById(id, ownerId);
 
-   const task = await this.findTaskById(id, ownerId);
+    // Criamos uma cópia do estado antigo para comparar depois
+    const oldStatus = taskBeforeUpdate.status;
+    const oldPriority = taskBeforeUpdate.priority;
+    const oldAssignees = [...taskBeforeUpdate.assignees];
 
-   // Mescla e SALVA os dados simples (title, description, status, etc.)
-   // Isso atualiza a tabela 'tasks'.
-   if (Object.keys(taskData).length > 0) {
-     this.taskRepository.merge(task, taskData);
-     await this.taskRepository.save(task);
-   }
+    // Mescla e salva os dados simples (title, description, status, etc.)
+    this.taskRepository.merge(taskBeforeUpdate, taskData);
 
-   // Verificamos se 'assigneeIds' foi realmente enviado no DTO.
-   if (Object.prototype.hasOwnProperty.call(updateTaskDto, 'assigneeIds')) {
-     let newAssignees: User[] = [];
-     if (assigneeIds && assigneeIds.length > 0) {
-       // Busca as entidades User para os novos IDs
-       newAssignees = await this.preloadAssignees(assigneeIds);
-     }
+    // Lida com a lógica da relação 'assignees'
+    if (assigneeIds) {
+      if (assigneeIds.length > 0) {
+        taskBeforeUpdate.assignees = await this.preloadAssignees(assigneeIds);
+      } else {
+        taskBeforeUpdate.assignees = [];
+      }
+    }
 
-     // 'task.assignees' aqui contém a lista ANTIGA de assignees (carregada pelo findOneById).
-     const oldAssignees = task.assignees || [];
+    // Salva a entidade atualizada
+    const updatedTask = await this.taskRepository.save(taskBeforeUpdate);
 
-     // O RelationQueryBuilder é a forma 100% correta de atualizar uma ManyToMany.
-     // Ele calcula a diferença (diff) e faz os INSERTS/DELETES necessários na tabela de junção.
-     await this.taskRepository
-       .createQueryBuilder()
-       .relation(Task, 'assignees') // Queremos modificar a relação 'assignees' da entidade Task
-       .of(task) // Para esta 'task' específica
-       .addAndRemove(newAssignees, oldAssignees); // Substitui a lista antiga pela nova
-   }
+    // --- LÓGICA DE AUDITORIA PÓS-SALVAMENTO ---
+    // Precisamos do 'ownerUsername' para o log. 
+    // Por enquanto, vamos pegá-lo da própria tarefa (já que o dono não muda).
+    // Em um cenário real, pegaríamos do token JWT (mas teríamos que passá-lo até aqui).
+    const username = updatedTask.ownerUsername; // Assumindo que o atualizador é o dono
 
-   // Busca a tarefa novamente para garantir que temos os dados mais recentes
-   // (com as relações atualizadas) para enviar ao RabbitMQ.
-   const updatedTask = await this.findTaskById(id, ownerId);
-   
-   this.rabbitClient.emit('task_updated', updatedTask);
+    // Log de mudança de Status
+    if (oldStatus !== updatedTask.status) {
+      await this.createAuditLog(
+        updatedTask,
+        ownerId,
+        username,
+        'STATUS_CHANGED',
+        oldStatus,
+        updatedTask.status,
+      );
+    }
 
-   return updatedTask;
- }
+    // Log de mudança de Prioridade
+    if (oldPriority !== updatedTask.priority) {
+      await this.createAuditLog(
+        updatedTask,
+        ownerId,
+        username,
+        'PRIORITY_CHANGED',
+        oldPriority,
+        updatedTask.priority,
+      );
+    }
+
+    // Log de mudança de Atribuição (lógica um pouco mais complexa)
+    const oldAssigneeIds = new Set(oldAssignees.map(u => u.id));
+    const newAssigneeIds = new Set(updatedTask.assignees.map(u => u.id));
+
+    // Verificamos quem foi adicionado
+    for (const newId of newAssigneeIds) {
+      if (!oldAssigneeIds.has(newId)) {
+        const user = updatedTask.assignees.find(u => u.id === newId);
+        await this.createAuditLog(
+          updatedTask,
+          ownerId,
+          username,
+          'ASSIGNEE_ADDED',
+          null,
+          user?.username || newId, // Salva o nome de usuário se tivermos
+        );
+      }
+    }
+
+    // Verificamos quem foi removido
+    for (const oldId of oldAssigneeIds) {
+      if (!newAssigneeIds.has(oldId)) {
+        const user = oldAssignees.find(u => u.id === oldId);
+        await this.createAuditLog(
+          updatedTask,
+          ownerId,
+          username,
+          'ASSIGNEE_REMOVED',
+          user?.username || oldId, // Salva o nome de usuário se tivermos
+          null,
+        );
+      }
+    }
+    // --- FIM DO LOG DE AUDITORIA ---
+
+    // Emite o evento do RabbitMQ
+    this.rabbitClient.emit('task_updated', updatedTask);
+
+    return updatedTask;
+  }
 
 
   async deleteTask(id: string, ownerId: string): Promise<Task> {

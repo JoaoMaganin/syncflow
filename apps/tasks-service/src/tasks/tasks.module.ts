@@ -7,10 +7,11 @@ import { Comment } from './entities/comment.entity';
 import { User } from './entities/user.entity';
 import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
+import { TaskHistory } from './entities/task-history.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Task, Comment, User]),
+    TypeOrmModule.forFeature([Task, Comment, User, TaskHistory]),
 
     ClientsModule.registerAsync([
       {

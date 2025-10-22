@@ -12,6 +12,7 @@ import { TaskStatus } from '../enums/task-status.enum';
 import { TaskPriority } from '../enums/task-priority.enum';
 import { Comment } from './comment.entity';
 import { User } from './user.entity';
+import { TaskHistory } from './task-history.entity';
 
 @Entity('tasks')
 export class Task {
@@ -64,4 +65,7 @@ export class Task {
     inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
   })
   assignees: User[];
+
+  @OneToMany(() => TaskHistory, (history) => history.task)
+  history: TaskHistory[];
 }
