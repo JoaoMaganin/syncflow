@@ -102,7 +102,7 @@ A arquitetura utiliza uma abordagem de microserviços orientada a eventos. Os se
 
 **1. Clonar o Repositório**
 ```bash
-git clone [https://github.com/JoaoMaganin/syncflow.git](https://github.com/JoaoMaganin/syncflow.git)
+git clone https://github.com/JoaoMaganin/syncflow.git
 cd syncflow
 ```
 
