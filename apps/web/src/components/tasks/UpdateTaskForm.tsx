@@ -64,7 +64,19 @@ export function UpdateTaskForm({ task, onSuccess }: UpdateTaskFormProps) {
   })
 
   function onSubmit(values: UpdateTaskFormValues) {
-    mutation.mutate(values)
+    // Converte a string 'assignees' de volta em um array 'assigneeIds'
+    const assigneeIds = values.assignees
+      ? values.assignees.split(',').map(id => id.trim()).filter(id => id.length > 0)
+      : [];
+
+    // Remove a propriedade 'assignees' (string) do objeto 'values'
+    const { assignees, ...taskData } = values;
+
+    // Chama a mutação com o objeto no formato CORRETO que a API e a 'mutationFn' esperam
+    mutation.mutate({
+      ...taskData,
+      assigneeIds,
+    });
   }
 
   return (

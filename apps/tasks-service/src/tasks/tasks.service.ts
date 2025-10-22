@@ -143,33 +143,46 @@ export class TasksService {
   }
 
   async updateTask(id: string, ownerId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    const { assigneeIds, ...taskData } = updateTaskDto;
 
-    const task = await this.findTaskById(id, ownerId);
+   const { assigneeIds, ...taskData } = updateTaskDto;
 
-    if (Object.keys(taskData).length > 0) {
-      this.taskRepository.merge(task, taskData);
-      await this.taskRepository.save(task);
-    }
+   const task = await this.findTaskById(id, ownerId);
 
-    if (Object.prototype.hasOwnProperty.call(updateTaskDto, 'assigneeIds')) {
-      const assigneeIdsArray = assigneeIds ?? [];
-      const newAssignees =
-        assigneeIdsArray.length > 0 ? await this.preloadAssignees(assigneeIdsArray) : [];
-      const oldAssignees = task.assignees || [];
+   // Mescla e SALVA os dados simples (title, description, status, etc.)
+   // Isso atualiza a tabela 'tasks'.
+   if (Object.keys(taskData).length > 0) {
+     this.taskRepository.merge(task, taskData);
+     await this.taskRepository.save(task);
+   }
 
-      await this.taskRepository
-        .createQueryBuilder()
-        .relation(Task, 'assignees')
-        .of(task)
-        .addAndRemove(newAssignees, oldAssignees);
-    }
+   // Verificamos se 'assigneeIds' foi realmente enviado no DTO.
+   if (Object.prototype.hasOwnProperty.call(updateTaskDto, 'assigneeIds')) {
+     let newAssignees: User[] = [];
+     if (assigneeIds && assigneeIds.length > 0) {
+       // Busca as entidades User para os novos IDs
+       newAssignees = await this.preloadAssignees(assigneeIds);
+     }
 
-    const savedTask = await this.taskRepository.save(task);
-    this.rabbitClient.emit('task_updated', savedTask);
+     // 'task.assignees' aqui contém a lista ANTIGA de assignees (carregada pelo findOneById).
+     const oldAssignees = task.assignees || [];
 
-    return savedTask;
-  }
+     // O RelationQueryBuilder é a forma 100% correta de atualizar uma ManyToMany.
+     // Ele calcula a diferença (diff) e faz os INSERTS/DELETES necessários na tabela de junção.
+     await this.taskRepository
+       .createQueryBuilder()
+       .relation(Task, 'assignees') // Queremos modificar a relação 'assignees' da entidade Task
+       .of(task) // Para esta 'task' específica
+       .addAndRemove(newAssignees, oldAssignees); // Substitui a lista antiga pela nova
+   }
+
+   // Busca a tarefa novamente para garantir que temos os dados mais recentes
+   // (com as relações atualizadas) para enviar ao RabbitMQ.
+   const updatedTask = await this.findTaskById(id, ownerId);
+   
+   this.rabbitClient.emit('task_updated', updatedTask);
+
+   return updatedTask;
+ }
 
 
   async deleteTask(id: string, ownerId: string): Promise<Task> {
