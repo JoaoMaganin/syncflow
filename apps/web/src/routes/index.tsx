@@ -8,24 +8,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { LoginForm } from '@/components/auth/LoginForm'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MessageSquare } from 'lucide-react'
 import { CreateTaskForm } from '@/components/tasks/CreateTaskForm'
 import type { Task } from '../../../../packages/types/TaskTypes'
-import { Pencil } from 'lucide-react';
 import { UpdateTaskForm } from '@/components/tasks/UpdateTaskForm'
 import { toast } from 'sonner'
-import { Trash2 } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { z } from 'zod'
 import { TaskCardSkeleton } from './tasks/TaskCardSkeleton'
+import { TaskCard } from '@/components/tasks/TaskCard'
 
 
 const tasksSearchSchema = z.object({
@@ -90,205 +79,158 @@ function HomePage() {
       )
     }
 
-    // Se estiver logado e carregando
     if (isLoading) {
-      <div className="mt-8 w-full max-w-2xl space-y-4">
-        <TaskCardSkeleton />
-        <TaskCardSkeleton />
-        <TaskCardSkeleton />
-      </div>
-      // TODO: Substituir por um Skeleton Loader
+      return (
+        <div className="mt-8 w-full max-w-2xl space-y-4">
+          <TaskCardSkeleton />
+          <TaskCardSkeleton />
+          <TaskCardSkeleton />
+        </div>
+      )
     }
 
-    // Se estiver logado e der erro
     if (isError) {
       return <p className="mt-4 text-destructive">Erro ao carregar as tarefas.</p>
     }
 
-    // Se estiver logado e tiver dados
-    if (tasks) {
+    if (!tasks || tasks.length === 0) {
+      return <p className="mt-4">Você ainda não tem nenhuma tarefa.</p>
+    }
+
+    // ---------------------------
+    // SE HOUVER PESQUISA: LISTA NORMAL
+    // ---------------------------
+    if (search && search.trim() !== '') {
       return (
         <div className="mt-8 w-full max-w-2xl">
-          {tasks.length === 0 ? (
-            <p>Você ainda não tem nenhuma tarefa.</p>
-          ) : (
-            <ul className="space-y-4">
-              {tasks.map((task: Task) => (
-                <li key={task.id}>
-                  <Link
-                    to="/tasks/$taskId"
-                    params={{ taskId: task.id }}
-                    className="block p-4 border rounded-lg shadow-sm hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex justify-between items-center">
-                      {/* LADO ESQUERDO */}
-                      <div className="flex-1">
-                        {/* Linha 1: título */}
-                        <h3 className="font-semibold text-lg">{task.title}</h3>
+          <ul className="space-y-4">
+            {tasks.map((task: Task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onEdit={(task) => setEditingTask(task)}
+                onDelete={(taskId) => deleteMutation.mutate(taskId)}
+              />
+            ))}
 
-                        {/* Linha 2: descrição */}
-                        {task.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {task.description}
-                          </p>
-                        )}
+            {/* Paginação */}
+            {tasks.length > 0 && search != '' && (
+              <div className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
 
-                        {/* Linha 3: status e prioridade */}
-                        <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                          <p>Status: {task.status.toLowerCase().replace("_", " ")}</p>
-                          <p>Prioridade: {task.priority.toLowerCase().replace("_", " ")}</p>
-                        </div>
+                {/* GRUPO 1: Controles de Página (só aparece se houver mais de 1 página) */}
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" asChild disabled={page <= 1}>
+                      <Link to="/" search={{ search, size, page: page - 1 }}>
+                        Anterior
+                      </Link>
+                    </Button>
 
-                        {/* Linha 4: comentários + usuários */}
-                        <div className="mt-3 flex items-center gap-3 text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <MessageSquare className="w-4 h-4" />
-                            <span className="text-sm">{task.comments.length}</span>
-                          </div>
+                    <span className="text-sm text-muted-foreground">
+                      Página {page} de {totalPages}
+                    </span>
 
-                          {task.assignees && task.assignees.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {task.assignees.map((user) => (
-                                <span
-                                  key={user.id}
-                                  className="text-xs bg-muted px-2 py-1 rounded-md"
-                                >
-                                  {user.username}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    <Button variant="outline" asChild disabled={page >= totalPages}>
+                      <Link to="/" search={{ search, size, page: page + 1 }}>
+                        Próxima
+                      </Link>
+                    </Button>
+                  </div>
+                )}
 
-                      {/* LADO DIREITO - ÍCONES */}
-                      <div className="flex flex-col items-center justify-center gap-2 ml-4">
-                        {/* Botão de edição */}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setEditingTask(task)
-                          }}
-                        >
-                          <div className="bg-blue-500 p-2 rounded-md inline-flex items-center justify-center">
-                            <Pencil className="w-4 h-4 text-white" />
-                          </div>
-
-                        </Button>
-
-                        {/* Botão de deletar */}
-                        <div
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                          }}
-                        >
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-destructive hover:text-destructive"
-                              >
-                                <div className="bg-yellow-500 p-2 rounded-md inline-flex items-center justify-center">
-                                  <Trash2 className="w-4 h-4" />
-                                </div>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="text-slate-50">
-                              <AlertDialogFooter className="flex flex-col items-center justify-center">
-                                <AlertDialogTitle className="text-slate-50">
-                                  Você tem certeza que deseja deletar a tarefa "{task.title}"?
-                                </AlertDialogTitle>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-red-900 hover:bg-destructive/90 text-slate-50"
-                                  onClick={() => deleteMutation.mutate(task.id)}
-                                >
-                                  Sim, deletar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-          )}
-
-          {tasks.length > 0 && search != '' && (
-            <div className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
-
-              {/* GRUPO 1: Controles de Página (só aparece se houver mais de 1 página) */}
-              {totalPages > 1 && (
+                {/* GRUPO 2: Controles de Tamanho (usando Links) */}
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" asChild disabled={page <= 1}>
-                    <Link to="/" search={{ search, size, page: page - 1 }}>
-                      Anterior
-                    </Link>
+                  <span className="text-sm text-muted-foreground">Itens por página:</span>
+
+                  {/* Botão para 5 itens */}
+                  <Button
+                    variant={size === 5 ? 'default' : 'outline'}
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/" search={{ search, page: 1, size: 5 }}>5</Link>
                   </Button>
 
-                  <span className="text-sm text-muted-foreground">
-                    Página {page} de {totalPages}
-                  </span>
+                  {/* Botão para 10 itens */}
+                  <Button
+                    variant={size === 10 ? 'default' : 'outline'}
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/" search={{ search, page: 1, size: 10 }}>10</Link>
+                  </Button>
 
-                  <Button variant="outline" asChild disabled={page >= totalPages}>
-                    <Link to="/" search={{ search, size, page: page + 1 }}>
-                      Próxima
-                    </Link>
+                  {/* Botão para 15 itens */}
+                  <Button
+                    variant={size === 15 ? 'default' : 'outline'}
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/" search={{ search, page: 1, size: 15 }}>15</Link>
                   </Button>
                 </div>
-              )}
 
-              {/* GRUPO 2: Controles de Tamanho (usando Links) */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Itens por página:</span>
-
-                {/* Botão para 5 itens */}
-                <Button
-                  variant={size === 5 ? 'default' : 'outline'}
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/" search={{ search, page: 1, size: 5 }}>5</Link>
-                </Button>
-
-                {/* Botão para 10 itens */}
-                <Button
-                  variant={size === 10 ? 'default' : 'outline'}
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/" search={{ search, page: 1, size: 10 }}>10</Link>
-                </Button>
-
-                {/* Botão para 15 itens */}
-                <Button
-                  variant={size === 15 ? 'default' : 'outline'}
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/" search={{ search, page: 1, size: 15 }}>15</Link>
-                </Button>
               </div>
+            )}
+          </ul>
 
-            </div>
-          )}
 
         </div>
       )
     }
 
-    return null
+    // ---------------------------
+    // SE NÃO HOUVER PESQUISA: KANBAN POR STATUS
+    // ---------------------------
+    // Agrupa tarefas por status
+    const groupedTasks = {
+      todo: [] as Task[],
+      in_progress: [] as Task[],
+      review: [] as Task[],
+      done: [] as Task[],
+      unlisted: [] as Task[],
+    }
+
+    tasks.forEach((task: Task) => {
+      const status = task.status?.toLowerCase()
+      if (!status) groupedTasks.unlisted.push(task)
+      else if (status === 'todo') groupedTasks.todo.push(task)
+      else if (status === 'in_progress') groupedTasks.in_progress.push(task)
+      else if (status === 'review') groupedTasks.review.push(task)
+      else if (status === 'done') groupedTasks.done.push(task)
+      else groupedTasks.unlisted.push(task)
+    })
+
+    const renderColumn = (title: string, taskList: Task[]) => (
+      <div className="flex-1 min-w-[250px] border rounded-lg p-4 bg-muted/30">
+        <h2 className="text-xl font-semibold mb-4 text-center">{title}</h2>
+        {taskList.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center">Sem tarefas</p>
+        ) : (
+          <ul className="space-y-4">
+            {taskList.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onEdit={(task) => setEditingTask(task)}
+                onDelete={(taskId) => deleteMutation.mutate(taskId)}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+    )
+
+    return (
+      <div className="mt-8 w-full flex flex-wrap gap-4 justify-center items-start">
+        {renderColumn('To Do', groupedTasks.todo)}
+        {renderColumn('In Progress', groupedTasks.in_progress)}
+        {renderColumn('Review', groupedTasks.review)}
+        {renderColumn('Done', groupedTasks.done)}
+      </div>
+    )
   }
+
 
   const deleteMutation = useMutation({
     mutationFn: (taskId: string) => {
@@ -308,7 +250,7 @@ function HomePage() {
 
   return (
     <div className="p-4 flex flex-col items-center">
-      <h1 className="text-3xl font-bold mt-10">Página Principal (Tarefas)</h1>
+      <h1 className="text-3xl font-bold mt-10">Minhas tarefas</h1>
 
       {user && ( // Só mostra o botão se o usuário estiver logado
         <Dialog open={isCreateTaskOpen} onOpenChange={setCreateTaskOpen}>
