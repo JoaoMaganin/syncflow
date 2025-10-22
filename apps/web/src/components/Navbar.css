@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0; /* Começa fora da tela à esquerda */
+    }
+    100% {
+      background-position: 200% 0; /* Termina fora da tela à direita */
+    }
+  }
+}

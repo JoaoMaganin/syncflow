@@ -1,0 +1,84 @@
+[
+  {
+    "id": "task-uuid-1",
+    "title": "Configurar o layout Kanban no front-end",
+    "description": "Refatorar a HomePage para exibir as tarefas em 4 colunas baseadas no status.",
+    "priority": "HIGH",
+    "status": "IN_PROGRESS",
+    "ownerId": "user-uuid-joao",
+    "ownerUsername": "joao.maganin",
+    "createdAt": "2025-10-20T10:00:00.000Z",
+    "updatedAt": "2025-10-21T11:00:00.000Z",
+    "assignees": [
+      { "id": "user-uuid-joao", "username": "joao.maganin" }
+    ],
+    "comments": [
+      {
+        "id": "comment-uuid-1",
+        "content": "Começando a implementação agora.",
+        "authorId": "user-uuid-joao",
+        "authorUsername": "joao.maganin",
+        "createdAt": "2025-10-21T11:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "task-uuid-2",
+    "title": "Testar a conexão com o RabbitMQ",
+    "description": "Verificar se o 'tasks-service' está publicando eventos corretamente.",
+    "priority": "MEDIUM",
+    "status": "TODO",
+    "ownerId": "user-uuid-joao",
+    "ownerUsername": "joao.maganin",
+    "createdAt": "2025-10-21T14:00:00.000Z",
+    "updatedAt": "2025-10-21T14:00:00.000Z",
+    "assignees": [],
+    "comments": []
+  },
+  {
+    "id": "task-uuid-3",
+    "title": "Corrigir bug de autenticação no Safari",
+    "description": "O token não está sendo salvo corretamente no navegador Safari. Investigar o localStorage e o 'persist' do Zustand.",
+    "priority": "URGENT",
+    "status": "REVIEW",
+    "ownerId": "user-uuid-outro",
+    "ownerUsername": "testusers",
+    "createdAt": "2025-10-19T08:00:00.000Z",
+    "updatedAt": "2025-10-20T17:00:00.000Z",
+    "assignees": [
+      { "id": "user-uuid-joao", "username": "joao.maganin" },
+      { "id": "user-uuid-outro", "username": "testusers" }
+    ],
+    "comments": [
+      {
+        "id": "comment-uuid-2",
+        "content": "Acho que o problema está na política de cookies do Safari.",
+        "authorId": "user-uuid-outro",
+        "authorUsername": "testusers",
+        "createdAt": "2025-10-20T15:00:00.000Z"
+      },
+      {
+        "id": "comment-uuid-3",
+        "content": "Vou testar uma solução alternativa com 'sessionStorage'.",
+        "authorId": "user-uuid-joao",
+        "authorUsername": "joao.maganin",
+        "createdAt": "2025-10-20T17:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "task-uuid-4",
+    "title": "Implementar o CRUD de Comentários no back-end",
+    "description": null,
+    "priority": "MEDIUM",
+    "status": "DONE",
+    "ownerId": "user-uuid-joao",
+    "ownerUsername": "joao.maganin",
+    "createdAt": "2025-10-18T13:00:00.000Z",
+    "updatedAt": "2025-10-19T10:00:00.000Z",
+    "assignees": [
+      { "id": "user-uuid-joao", "username": "joao.maganin" }
+    ],
+    "comments": []
+  }
+]

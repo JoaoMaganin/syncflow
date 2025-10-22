@@ -3,7 +3,7 @@ import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { privateClient } from '@/services/base'
 import { useAuthStore } from '@/lib/authStore'
-//import { AuthWall } from '@/components/auth/AuthWall'
+import { AuthWall } from '@/components/auth/AuthWall'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger, } from '@/components/ui/dialog'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { RegisterForm } from '@/components/auth/RegisterForm'
@@ -15,6 +15,8 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { TaskCardSkeleton } from './tasks/TaskCardSkeleton'
 import { TaskCard } from '@/components/tasks/TaskCard'
+import mockTasks from '../../public/mockTasks.json';
+import { MessageSquare } from 'lucide-react'
 
 
 const tasksSearchSchema = z.object({
@@ -73,9 +75,62 @@ function HomePage() {
   const renderContent = () => {
     if (!user) {
       return (
-        <p className="mt-4 text-muted-foreground">
-          Você pode ver o conteúdo, mas precisa fazer login para interagir.
-        </p>
+        <AuthWall>
+          <div className="mt-8 w-full max-w-2xl">
+            <p className="text-center text-muted-foreground mb-4">
+            </p>
+            {/* Aplicamos uma opacidade para dar a ideia de "desabilitado" */}
+            <ul className="space-y-4 opacity-70">
+              {/* 2. Mapeamos o array 'mockTasks' importado */}
+              {(mockTasks as Task[]).map((task: Task) => (
+                // 3. Usamos o mesmo JSX do seu 'if (tasks)', mas SEM os botões
+                <li key={task.id}>
+                  {/* O Link ainda funciona, levando para a página de detalhes */}
+                  <Link
+                    to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    className="block p-4 border rounded-lg shadow-sm hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      {/* LADO ESQUERDO (igual ao seu) */}
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{task.title}</h3>
+                        {task.description && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {task.description}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
+                          <p>Status: {task.status.toLowerCase().replace("_", " ")}</p>
+                          <p>Prioridade: {task.priority.toLowerCase().replace("_", " ")}</p>
+                        </div>
+                        <div className="mt-3 flex items-center gap-3 text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="w-4 h-4" />
+                            <span className="text-sm">{task.comments.length}</span>
+                          </div>
+                          {task.assignees && task.assignees.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {task.assignees.map((user) => (
+                                <span
+                                  key={user.id}
+                                  className="text-xs bg-muted px-2 py-1 rounded-md"
+                                >
+                                  {user.username}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* 4. Note que o 'div' dos ícones de Editar/Deletar foi removido */}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </AuthWall>
       )
     }
 
