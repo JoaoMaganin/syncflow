@@ -3,7 +3,7 @@
 Este repositório contém a implementação do desafio prático para a vaga de Full-stack Developer na Jungle Gaming. O projeto consiste em um Sistema de Gestão de Tarefas Colaborativo construído com uma arquitetura de microserviços, utilizando React.js no front-end e NestJS no back-end, tudo orquestrado com Docker.
 
 ## 🚀 Status Atual do Projeto
-O projeto está em um estágio avançado, com a infraestrutura completa de microserviços de back-end (autenticação, tarefas e notificações) e um front-end robusto e totalmente funcional.
+O projeto está em estágio avançado, com a infraestrutura completa de microserviços de back-end (autenticação, tarefas e notificações) e um front-end robusto e totalmente funcional.
 
 ### Back-end (`/apps/api-gateway`, `/apps/auth-service`, `/apps/tasks-service` e `/apps/notifications-service`)
 - Estrutura do monorepo com `pnpm` e `Turborepo`.
@@ -137,8 +137,12 @@ Os serviços estarão disponíveis nos seguintes endereços:
 - **Tema Claro/Escuro:** A UI está configurada com variáveis de CSS para suportar temas, mas ainda não há um "toggle" para o usuário alternar entre eles.
 - **Armazenar o refreshToken pelo onlyHttp**
 - **Lógica de Notificações:** Atualmente, o `notifications-service` envia o evento WebSocket para **todos** os clientes conectados (`sendToAll`). A próxima etapa de refinamento seria implementar a lógica de direcionamento, enviando a notificação apenas para os usuários relevantes (o `ownerId` e os `assignees` da tarefa).
-- **Histórico de Alterações:** A funcionalidade de "audit log" ainda não foi implementada.
 - **Autorização de Atribuição:** Atualmente, qualquer usuário logado pode criar uma tarefa e atribuí-la a qualquer outro usuário (se souber o ID). Uma melhoria seria limitar a atribuição, permitindo que apenas o dono da tarefa possa adicionar/remover `assignees`.
+- **Atribuir tarefa pelo username ao invés de id:** Atualmente as tarefas só podem ser atribuídas por id, o que atrapalha a experiência do usuário visto que os ids não são expostos no frontend da aplicação.
+- **Drag and Drop de tarefas:** Criar funcionalidade de Drag and Drop para poder atualizar as tarefas arrastando entre as tabelas.
+- **Atualização de cadastro do user logado:** Página para usuário poder alterar seu username, email e senha caso precise.
+- **Sino de notificações:** Criar mecanismo para que todas as atualizações não visualizadas pelo usuário fiquem armazenadas em um sino até que sejam visualizadas.
+- **Crud nos comentários:** Dar ao usuário o poder de alterar e deletar seus comentários
 
 ## 🕒 Tempo Gasto (Preencha com suas horas)
 
@@ -148,8 +152,8 @@ Os serviços estarão disponíveis nos seguintes endereços:
 | Desenvolvimento do Auth Service e DB | 14 horas |
 | Implementação do JWT e Rotas Protegidas | 2 horas |
 | Documentação (Swagger e README) | 1 horas |
-| Login no frontend | 6 horas |
-| Desenvolvimento do tasks-service | 16 horas |
-| Desenvolvimento da tasks + home | 11 horas |
+| Login no frontend | 7 horas |
+| Desenvolvimento do tasks-service | 17 horas |
+| Desenvolvimento da tasks + home page | 12 horas |
 | Desenvolvimento do notifications-service | 10 horas |
-| **Total** | **65 horas** |
+| **Total** | **68 horas** |
