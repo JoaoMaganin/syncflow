@@ -5,7 +5,7 @@ Este repositório contém a implementação do desafio prático para a vaga de F
 ## 🚀 Status Atual do Projeto
 O projeto está em um estágio avançado, com a infraestrutura completa de microserviços de back-end (autenticação, tarefas e notificações) e um front-end robusto e totalmente funcional.
 
-### Back-end (`/apps/api-gateway`, `/apps/auth-service`)
+### Back-end (`/apps/api-gateway`, `/apps/auth-service`, `/apps/tasks-service` e `/apps/notifications-service`)
 - Estrutura do monorepo com `pnpm` e `Turborepo`.
 - Ambiente de desenvolvimento 100% containerizado com Docker e Docker Compose, incluindo serviços para `NestJS`, `PostgreSQL` e `RabbitMQ`.
 - **`api-gateway`:**
