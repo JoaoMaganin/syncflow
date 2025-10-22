@@ -225,7 +225,7 @@ function TaskDetailPage() {
                 <Card className="border border-muted bg-background/60 backdrop-blur-md">
                     <CardHeader>
                         <CardTitle className={`text-2xl font-bold flex items-center gap-2 ${greenAnimation()}`}>
-                            Histórico de Alterações
+                            Histórico de alterações
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -233,7 +233,7 @@ function TaskDetailPage() {
                             <ul className="space-y-4">
                                 {task.history.map((log) => (
                                     <li key={log.id} className="text-sm text-muted-foreground">
-                                        <span className="font-medium text-foreground">{log.username}</span>
+                                        <span className="font-medium text-foreground text-green-300">{log.username}</span>
                                         {' '}
                                         {/* Lógica para formatar a mensagem */}
                                         {log.action === 'TASK_CREATED' && `criou a tarefa: "${log.newValue}".`}
