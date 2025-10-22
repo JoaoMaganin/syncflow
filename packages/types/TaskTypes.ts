@@ -36,3 +36,10 @@ export interface Task {
   assignees: { id: string; username: string }[]; // Já vamos adicionar o que fizemos antes
   comments: { id: string; authorUsername: string }[]; // E aqui também
 }
+
+
+export interface TaskCardProps {
+    task: Task
+    onEdit: (task: Task) => void
+    onDelete: (taskId: string) => void
+}

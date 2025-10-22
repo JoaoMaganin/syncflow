@@ -16,7 +16,7 @@ import { z } from 'zod'
 import { TaskCardSkeleton } from './tasks/TaskCardSkeleton'
 import { TaskCard } from '@/components/tasks/TaskCard'
 import mockTasks from '../../public/mockTasks.json';
-import { MessageSquare } from 'lucide-react'
+import "../index.css";
 
 
 const tasksSearchSchema = z.object({
@@ -76,57 +76,20 @@ function HomePage() {
     if (!user) {
       return (
         <AuthWall>
-          <div className="mt-8 w-full max-w-2xl">
+          <div className="p-4 flex flex-col items-center">
             <p className="text-center text-muted-foreground mb-4">
             </p>
             {/* Aplicamos uma opacidade para dar a ideia de "desabilitado" */}
             <ul className="space-y-4 opacity-70">
-              {/* 2. Mapeamos o array 'mockTasks' importado */}
+              {/* Mapeamos o array 'mockTasks' importado */}
               {(mockTasks as Task[]).map((task: Task) => (
-                // 3. Usamos o mesmo JSX do seu 'if (tasks)', mas SEM os botões
-                <li key={task.id}>
-                  {/* O Link ainda funciona, levando para a página de detalhes */}
-                  <Link
-                    to="/tasks/$taskId"
-                    params={{ taskId: task.id }}
-                    className="block p-4 border rounded-lg shadow-sm hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex justify-between items-center">
-                      {/* LADO ESQUERDO (igual ao seu) */}
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{task.title}</h3>
-                        {task.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                          <p>Status: {task.status.toLowerCase().replace("_", " ")}</p>
-                          <p>Prioridade: {task.priority.toLowerCase().replace("_", " ")}</p>
-                        </div>
-                        <div className="mt-3 flex items-center gap-3 text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <MessageSquare className="w-4 h-4" />
-                            <span className="text-sm">{task.comments.length}</span>
-                          </div>
-                          {task.assignees && task.assignees.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {task.assignees.map((user) => (
-                                <span
-                                  key={user.id}
-                                  className="text-xs bg-muted px-2 py-1 rounded-md"
-                                >
-                                  {user.username}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {/* 4. Note que o 'div' dos ícones de Editar/Deletar foi removido */}
-                    </div>
-                  </Link>
-                </li>
+                // Usamos o mesmo JSX do seu 'if (tasks)', mas SEM os botões
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onEdit={(task) => setEditingTask(task)}
+                  onDelete={(taskId) => deleteMutation.mutate(taskId)}
+                />
               ))}
             </ul>
           </div>
@@ -257,12 +220,13 @@ function HomePage() {
     })
 
     const renderColumn = (title: string, taskList: Task[]) => (
-      <div className="flex-1 min-w-[250px] border rounded-lg p-4 bg-muted/30">
+      <div className="flex-1 min-w-[250px] border rounded-lg p-4 bg-muted/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-animated-light rounded-lg pointer-events-none" />
         <h2 className="text-xl font-semibold mb-4 text-center">{title}</h2>
         {taskList.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center">Sem tarefas</p>
+          <p className="text-sm text-muted-foreground text-center relative z-10">Sem tarefas</p>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-4 relative z-10">
             {taskList.map((task) => (
               <TaskCard
                 key={task.id}
@@ -293,7 +257,7 @@ function HomePage() {
       return privateClient.delete(`/tasks/${taskId}`)
     },
     onSuccess: (data) => {
-      // 3. ATUALIZA A LISTA DE TAREFAS NA TELA
+      // ATUALIZA A LISTA DE TAREFAS NA TELA
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast.success(`Tarefa deletada "${data.data.title}" com sucesso!`)
     },
@@ -304,34 +268,32 @@ function HomePage() {
   })
 
   return (
-    <div className="p-4 flex flex-col items-center">
-      <h1 className="text-3xl font-bold mt-10">Minhas tarefas</h1>
+    <div className="p-4 flex flex-col">
+      <div className="w-full max-w-7xl mx-auto flex justify-center items-center mb-4 mt-10 px-4 relative">
+        <h1 className="text-3xl font-bold">Minhas tarefas</h1>
 
-      {user && ( // Só mostra o botão se o usuário estiver logado
-        <Dialog open={isCreateTaskOpen} onOpenChange={setCreateTaskOpen}>
-          <DialogTrigger asChild>
-            <Button>Criar Tarefa</Button>
-          </DialogTrigger>
-          <DialogContent className="text-slate-50">
-            <DialogHeader>
-              <DialogTitle>Criar Nova Tarefa</DialogTitle>
-            </DialogHeader>
-            {/* 4. RENDERIZA O FORMULÁRIO DENTRO DO MODAL */}
-            <CreateTaskForm onSuccess={() => setCreateTaskOpen(false)} />
-          </DialogContent>
-        </Dialog>
-      )}
+        {user && ( // Só mostra o botão se o usuário estiver logado
+          <div className="absolute right-4">
+            <Dialog open={isCreateTaskOpen} onOpenChange={setCreateTaskOpen}>
+              <DialogTrigger asChild>
+                <Button>Criar tarefa</Button>
+              </DialogTrigger>
+              <DialogContent className="text-slate-50">
+                <DialogHeader>
+                  <DialogTitle>Criar Nova Tarefa</DialogTitle>
+                </DialogHeader>
+                {/* RENDERIZA O FORMULÁRIO DENTRO DO MODAL */}
+                <CreateTaskForm onSuccess={() => setCreateTaskOpen(false)} />
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+      </div>
 
       {renderContent()}
 
-      {/* Envolva o botão com o AuthWall */}
-      {/* <AuthWall>
-        <Button className="mt-8" onClick={handleClick}>
-          Testar Rota Protegida (/profile)
-        </Button>
-      </AuthWall> */}
 
-      {/* --- 6. ADICIONE O NOVO MODAL DE EDIÇÃO AQUI --- */}
+      {/* --- ADICIONE O NOVO MODAL DE EDIÇÃO AQUI --- */}
       <Dialog
         open={!!editingTask} // O modal abre se 'editingTask' não for nulo
         onOpenChange={(isOpen) => {

@@ -31,14 +31,14 @@ export function Navbar() {
     }
 
     return (
-        <nav className="w-full flex justify-between items-center p-4 bg-slate-950">
+        <nav className="w-full flex justify-between items-center p-4 bg-neutral-900">
             <Link
                 to="/"
                 className="
                     text-4xl font-bold bg-gradient-to-r from-slate-50 via-green-400 to-slate-50
                     bg-clip-text text-transparent
                     [background-size:200%_auto]
-                    animate-[shimmer_3s_linear_infinite]"
+                    animate-[shimmer_7s_linear_infinite]"
                 >
                 SyncFlow
             </Link>
@@ -61,7 +61,12 @@ export function Navbar() {
             {user ? (
                 // Se o usuário estiver logado, mostramos o nome dele e o botão de sair
                 <div className="flex items-center gap-4">
-                    <span className="text-xl text-green-300">Olá, {user.username}!</span>
+                    <span className="
+                        text-xl text-green-300 
+                        bg-gradient-to-r from-slate-50 via-green-400 to-slate-50
+                        bg-clip-text text-transparent
+                        [background-size:200%_auto]
+                        animate-[shimmer_3s_linear_infinite]">Olá, {user.username}!</span>
                     <Button variant="destructive" className="text-xl text-slate-50 border border-gray-300 rounded-md p-4" onClick={logout}>
                         Sair
                     </Button>

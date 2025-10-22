@@ -84,7 +84,7 @@ function RootComponent() {
   }, [token]) // Este 'useEffect' roda toda vez que o 'token' muda
 
   return (
-    <div className="relative text-foreground min-h-screen flex flex-col bg-slate-950">
+    <div className="relative text-foreground min-h-screen flex flex-col bg-neutral-900">
 
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-green-500 rounded-full 

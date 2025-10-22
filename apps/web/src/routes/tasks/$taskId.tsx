@@ -1,38 +1,50 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { privateClient } from '@/services/base'
-import type { Task, Comment } from '../../../../../packages/types/TaskTypes'
+import type { Task, Comment, TaskPriority } from '../../../../../packages/types/TaskTypes'
 import { CreateCommentForm } from '@/components/tasks/CreateCommentForm'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import './taskId.css';
 
 const commentsSearchSchema = z.object({
     commentPage: z.number().int().min(1).optional(),
-    commentSize: z.number().int().min(1).optional()
-});
+    commentSize: z.number().int().min(1).optional(),
+})
 
 export const Route = createFileRoute('/tasks/$taskId')({
     validateSearch: (search) => commentsSearchSchema.parse(search),
     component: TaskDetailPage,
-});
+})
+
+const priorityShadowMap: Record<string, string> = {
+    low: 'inset 0px 0px 50px 0px rgba(0,255,0,0.38)',
+    medium: 'inset 0px 0px 50px 0px rgba(255,253,10,0.38)',
+    high: 'inset 0px 0px 50px 0px rgba(255,0,0,0.4)',
+    urgent: 'inset 0px 0px 50px 0px rgba(67, 2, 128, 1)',
+}
+
+const greenAnimation: () => string = () => {
+    return `font-bold bg-gradient-to-r from-slate-50 via-green-400 to-slate-50
+                            bg-clip-text text-transparent
+                            [background-size:200%_auto]
+                            animate-[shimmer_6s_linear_infinite]`
+}
 
 function TaskDetailPage() {
-    // Pegamos o 'taskId' da URL usando o hook do TanStack Router
-    const { taskId } = Route.useParams();
+    const { taskId } = Route.useParams()
+    const { commentPage: urlCommentPage, commentSize: urlCommentSize } = useSearch({ from: Route.id })
 
-    // Leia os parâmetros da URL (podem vir como 'undefined')
-    const { commentPage: urlCommentPage, commentSize: urlCommentSize } = useSearch({ from: Route.id });
+    const commentPage = urlCommentPage || 1
+    const commentSize = urlCommentSize || 5
 
-    // VALORES PADRÃO AQUI
-    const commentPage = urlCommentPage || 1;
-    const commentSize = urlCommentSize || 5;
-
-    // --- Query 1: Buscar os dados da Tarefa ---
+    // --- Query 1: Buscar Tarefa ---
     const {
         data: task,
         isLoading: isTaskLoading,
-        isError: isTaskError
+        isError: isTaskError,
     } = useQuery({
         queryKey: ['task', taskId],
         queryFn: async (): Promise<Task> => {
@@ -41,11 +53,11 @@ function TaskDetailPage() {
         },
     })
 
-    // --- Query 2: Buscar os Comentários ---
+    // --- Query 2: Buscar Comentários ---
     const {
         data: commentsResult,
         isLoading: isCommentsLoading,
-        isError: isCommentsError
+        isError: isCommentsError,
     } = useQuery({
         queryKey: ['comments', taskId, commentPage, commentSize],
         queryFn: async () => {
@@ -59,183 +71,158 @@ function TaskDetailPage() {
         enabled: !!task,
     })
 
-    // Extrai os dados do resultado paginado
-    const comments = commentsResult?.data
+    const comments = commentsResult?.data ?? []
     const totalCommentPages = commentsResult?.totalPages ?? 1
 
     if (isTaskLoading) {
         return (
-            <div className="p-4">
-                <h1 className="text-2xl font-bold">Carregando Tarefa...</h1>
-                {/* TODO: Adicionar Skeleton Loader aqui */}
+            <div className="p-6">
+                <Skeleton className="h-8 w-48 mb-4" />
+                <Skeleton className="h-4 w-72 mb-2" />
+                <Skeleton className="h-32 w-full" />
             </div>
         )
     }
 
     if (isTaskError) {
         return (
-            <div className="p-4">
-                <h1 className="text-2xl font-bold text-destructive">Erro</h1>
-                <p>Não foi possível carregar a tarefa. Tente novamente.</p>
+            <div className="p-6 text-center">
+                <h1 className="text-2xl font-bold text-destructive">Erro ao carregar</h1>
+                <p className="text-muted-foreground">Não foi possível carregar a tarefa. Tente novamente.</p>
             </div>
         )
     }
 
     return (
-        <div className="p-4">
-            <h1 className="text-3xl font-bold">{task?.title}</h1>
+        <div className="relative min-h-screen p-6 text-4xl">
 
-            <p className="text-lg text-muted-foreground mt-2">
-                Criado por: <span className="font-medium text-foreground">{task?.ownerUsername}</span>
-            </p>
+            <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+                {/* --- Cabeçalho da Tarefa --- */}
+                <Card className="border border-muted bg-background/60 backdrop-blur-md"
+                    style={{
+                        boxShadow: priorityShadowMap[task?.priority?.toLowerCase() || ''] || 'none',
+                    }}
+                >
+                    <CardHeader>
+                        <CardTitle className="text-3xl font-bold text-center">{task?.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground mt-3 text-base">
+                            {task?.description || 'Nenhuma descrição fornecida.'}
+                        </p>
+                        
+                        <p className="text-sm text-muted-foreground mb-2">
+                            Criado por: <span className="font-medium text-foreground">{task?.ownerUsername}</span>
+                        </p>
 
-            <div className="flex gap-4 my-4 text-sm">
-                <span className="p-1 px-2 rounded bg-muted text-muted-foreground capitalize">
-                    {task?.status.toLowerCase().replace('_', ' ')}
-                </span>
-                <span className="p-1 px-2 rounded bg-muted text-muted-foreground capitalize">
-                    Prioridade: {task?.priority.toLowerCase()}
-                </span>
-            </div>
-
-            <p className="mt-4 text-lg text-muted-foreground">
-                {task?.description || 'Nenhuma descrição fornecida.'}
-            </p>
-
-            <div className="mt-6">
-                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Atribuído a</h3>
-                <div className="flex flex-wrap gap-2 mt-2">
-                    {/* Verifica se a lista de 'assignees' existe e não está vazia */}
-                    {task?.assignees && task.assignees.length > 0 ? (
-                        task.assignees.map(user => (
-                            <div
-                                key={user.id}
-                                className="p-1 px-3 rounded-full bg-secondary text-secondary-foreground text-sm font-medium"
-                            >
-                                {user.username}
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-sm text-muted-foreground">Ninguém</p>
-                    )}
-                </div>
-            </div>
-
-            <hr className="my-8" />
-
-            <h2 className="text-2xl font-bold mb-4">Comentários</h2>
-
-            {/* --- Formulário de comentário --- */}
-            <div className="mb-6">
-                <CreateCommentForm taskId={taskId} />
-            </div>
-            {/* --- Fim do formulário --- */}
-
-            {/* --- Seção de comentários --- */}
-            <div>
-                {/* Mostra "Carregando..." enquanto busca os comentários */}
-                {isCommentsLoading && (
-                    <p className="text-muted-foreground">Carregando comentários...</p>
-                )}
-
-                {/* Mostra uma mensagem de erro se a busca de comentários falhar */}
-                {isCommentsError && (
-                    <p className="text-destructive">Erro ao carregar os comentários.</p>
-                )}
-
-                {/* Se a busca for bem-sucedida... */}
-                {comments && (
-                    <div className="space-y-4">
-                        {comments.length === 0 && (
-                            <p className="text-muted-foreground">Seja o primeiro a comentar!</p>
-                        )}
-                        {/* Se houver comentários, faz um .map() e exibe cada um */}
-                        {comments.map((comment) => (
-                            <div key={comment.id} className="p-4 border rounded-lg bg-muted/50">
-                                <p className="text-sm">{comment.content}</p>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                    {/* Por enquanto, mostramos o ID. Mais tarde, podemos buscar o nome do usuário. */}
-                                    Por: Usuário <span className="font-medium text-foreground">{comment.authorUsername}</span> em{' '}
-                                    {new Date(comment.createdAt).toLocaleDateString()}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* {totalCommentPages > 1 && (
-                    <div className="mt-6 flex justify-center items-center gap-4">
-                        <Button variant="outline" size="sm" asChild disabled={commentPage <= 1}>
-                            <Link
-                                search={(prev) => ({
-                                    ...prev,
-                                    commentPage: (prev.commentPage || 1) - 1, // Lógica segura
-                                })}
-                            >
-                                Anterior
-                            </Link>
-                        </Button>
-
-                        <span className="text-sm text-muted-foreground">
-                            Página {commentPage} de {totalCommentPages}
-                        </span>
-
-                        <Button variant="outline" size="sm" asChild disabled={commentPage >= totalCommentPages}>
-                            <Link
-                                search={(prev) => ({
-                                    ...prev,
-                                    commentPage: (prev.commentPage || 1) + 1, // Lógica segura
-                                })}
-                            >
-                                Próxima
-                            </Link>
-                        </Button>
-                    </div>
-
-
-                )} */}
-
-                {/* --- BLOCO DE PAGINAÇÃO ATUALIZADO --- */}
-                {comments && comments.length > 0 && (
-                    <div className="mt-6 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
-
-                        {/* Grupo 1: Controles de Página */}
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" asChild disabled={commentPage <= 1}>
-                                <Link search={(prev) => ({ ...prev, commentPage: (prev.commentPage || 1) - 1 })}>
-                                    Anterior
-                                </Link>
-                            </Button>
-                            <span className="text-sm text-muted-foreground">
-                                Página {commentPage} de {totalCommentPages}
+                        <div className="flex gap-4 my-3 text-sm">
+                            <span className="p-1 px-2 rounded bg-muted text-muted-foreground capitalize">
+                                <b>Status:</b> {task?.status.toLowerCase().replace('_', ' ')}
                             </span>
-                            <Button variant="outline" size="sm" asChild disabled={commentPage >= totalCommentPages}>
-                                <Link search={(prev) => ({ ...prev, commentPage: (prev.commentPage || 1) + 1 })}>
-                                    Próxima
-                                </Link>
-                            </Button>
+                            <span className="p-1 px-2 rounded bg-muted text-muted-foreground capitalize">
+                                <b>Prioridade:</b> {task?.priority.toLowerCase()}
+                            </span>
                         </div>
 
-                        {/* Grupo 2: Controles de Tamanho (usando Links) */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Itens:</span>
-                            <Button variant={commentSize === 5 ? 'default' : 'outline'} size="sm" asChild>
-                                <Link search={(prev) => ({ ...prev, commentPage: 1, commentSize: 5 })}>5</Link>
-                            </Button>
-                            <Button variant={commentSize === 10 ? 'default' : 'outline'} size="sm" asChild>
-                                <Link search={(prev) => ({ ...prev, commentPage: 1, commentSize: 10 })}>10</Link>
-                            </Button>
-                            <Button variant={commentSize === 15 ? 'default' : 'outline'} size="sm" asChild>
-                                <Link search={(prev) => ({ ...prev, commentPage: 1, commentSize: 15 })}>15</Link>
-                            </Button>
+                        <div className="mt-5">
+                            <h3 className="text-xs font-semibold uppercase text-muted-foreground">Atribuído a:</h3>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {task?.assignees && task.assignees.length > 0 ? (
+                                    task.assignees.map((user) => (
+                                        <div
+                                            key={user.id}
+                                            className="p-1 px-3 rounded-full bg-secondary text-secondary-foreground text-sm font-medium"
+                                        >
+                                            {user.username}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">Ninguém</p>
+                                )}
+                            </div>
                         </div>
+                    </CardContent>
+                </Card>
 
-                    </div>
-                )}
+                {/* --- Seção de Comentários --- */}
+                <Card className="border border-muted bg-background/60 backdrop-blur-md">
+                    <CardHeader>
+                        <CardTitle className={greenAnimation()}>
+                            Comentários
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <CreateCommentForm taskId={taskId} />
+
+                        {isCommentsLoading ? (
+                            <p className="text-muted-foreground mt-4">Carregando comentários...</p>
+                        ) : isCommentsError ? (
+                            <p className="text-destructive mt-4">Erro ao carregar os comentários.</p>
+                        ) : comments.length === 0 ? (
+                            <p className="text-xl text-muted-foreground mt-4">Seja o primeiro a comentar!</p>
+                        ) : (
+                            <div className="space-y-4 mt-4">
+                                {comments.map((comment) => (
+                                    <div
+                                        key={comment.id}
+                                        className="p-4 border border-muted-foreground/10 rounded-lg bg-muted/40"
+                                    >
+                                        <p className="text-sm">{comment.content}</p>
+                                        <p className="text-xs text-muted-foreground mt-2 font-bold">
+                                            Comentado por <span className="font-medium text-green-400">{comment.authorUsername}</span> em{' '}
+                                            {new Date(comment.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Paginação */}
+                        {comments.length > 0 && (
+                            <div className="mt-6 flex flex-wrap justify-between items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm" asChild disabled={commentPage <= 1}>
+                                        <Link search={(prev) => ({ ...prev, commentPage: (prev.commentPage || 1) - 1 })}>
+                                            Anterior
+                                        </Link>
+                                    </Button>
+                                    <span className="text-sm text-muted-foreground">
+                                        Página {commentPage} de {totalCommentPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        asChild
+                                        disabled={commentPage >= totalCommentPages}
+                                    >
+                                        <Link search={(prev) => ({ ...prev, commentPage: (prev.commentPage || 1) + 1 })}>
+                                            Próxima
+                                        </Link>
+                                    </Button>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-muted-foreground">Itens por página:</span>
+                                    {[5, 10, 15].map((size) => (
+                                        <Button
+                                            key={size}
+                                            variant={commentSize === size ? 'default' : 'outline'}
+                                            size="sm"
+                                            asChild
+                                        >
+                                            <Link search={(prev) => ({ ...prev, commentPage: 1, commentSize: size })}>
+                                                {size}
+                                            </Link>
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
-            {/* --- Fim da seção de comantários --- */}
-
-
         </div>
     )
 }
+
+export default TaskDetailPage
