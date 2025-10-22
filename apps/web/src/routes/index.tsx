@@ -120,7 +120,7 @@ function HomePage() {
     // ---------------------------
     if (search && search.trim() !== '') {
       return (
-        <div className="mt-8 w-full max-w-2xl">
+        <div className="mt-8 w-full max-w-2xl items-center">
           <ul className="space-y-4">
             {tasks.map((task: Task) => (
               <TaskCard
