@@ -71,7 +71,7 @@ export class TasksController {
 
     return this.tasksService.send(
       { cmd: 'update_task' },
-      { id, ownerId, updateTaskDto },
+      { id, ownerId, updateTaskDto, user: req.user },
     );
   }
 

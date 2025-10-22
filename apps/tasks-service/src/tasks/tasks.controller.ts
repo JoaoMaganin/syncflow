@@ -32,9 +32,10 @@ export class TasksController {
   }
 
   @MessagePattern({ cmd: 'update_task' })
-  updateTask(@Payload() payload: { id: string; ownerId: string; updateTaskDto: UpdateTaskDto }) {
-    return this.tasksService.updateTask(payload.id, payload.ownerId, payload.updateTaskDto);
-  }
+  updateTask(@Payload() payload: { id: string; updateTaskDto: UpdateTaskDto; user: { userId: string, username: string } }) {
+  // Passe o objeto 'user' inteiro para o serviço
+  return this.tasksService.updateTask(payload.id, payload.user, payload.updateTaskDto);
+}
 
   @MessagePattern({ cmd: 'delete_task' })
   deleteTask(@Payload() payload: { id: string; ownerId: string }) {
