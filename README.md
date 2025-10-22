@@ -13,6 +13,7 @@ O projeto está em um estágio avançado, com a infraestrutura completa de micro
   - Proteção de rotas com `JwtAuthGuard` (Passport.js).
   - Validação de DTOs com `class-validator` para todas as requisições.
   - Documentação completa da API com Swagger (`/api/docs`).
+  - Definição de número máximo de requisições por segundo(10 req/seg)
 - **`auth-service`:**
   - Fluxo completo de autenticação com JWT: Registro, Login (`accessToken` + `refreshToken`) e Refresh.
   - CRUD completo de usuários.
@@ -22,6 +23,7 @@ O projeto está em um estágio avançado, com a infraestrutura completa de micro
   - **Atribuição Múltipla:** Lógica `ManyToMany` para atribuir múltiplos usuários a tarefas (via `assigneeIds`).
   - **Paginação e Busca:** Endpoint de listagem (`GET /api/tasks`) implementado com paginação (`page`, `size`) e busca textual (`search`).
   - **Produtor de Eventos:** Publica eventos no `RabbitMQ` nos eventos `task_created`, `task_updated` e `comment_created`.
+  - **Audit log das tarefas:** Todo o histórico de alteração das tarefas.
 - **`notifications-service`:**
   - **Consumidor de Eventos:** Ouve a fila `tasks_queue` do `RabbitMQ` para receber eventos de tarefas e comentários.
   - **Servidor WebSocket:** Atua como uma aplicação híbrida (NestJS), servindo um `WebSocketGateway` (Socket.IO).
