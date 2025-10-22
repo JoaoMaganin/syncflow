@@ -30,16 +30,39 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   ownerId: string;
-  ownerUsername: string; // Já vamos adicionar o que fizemos antes
+  ownerUsername: string;
   createdAt: string;
   updatedAt: string;
-  assignees: { id: string; username: string }[]; // Já vamos adicionar o que fizemos antes
-  comments: { id: string; authorUsername: string }[]; // E aqui também
+  assignees: { id: string; username: string }[];
+  comments: { id: string; authorUsername: string }[];
+  history: TaskHistory[];
 }
 
+export interface mockedTask {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  ownerId: string;
+  ownerUsername: string;
+  createdAt: string;
+  updatedAt: string;
+  assignees: { id: string; username: string }[];
+  comments: { id: string; authorUsername: string }[];
+}
 
 export interface TaskCardProps {
     task: Task
     onEdit: (task: Task) => void
     onDelete: (taskId: string) => void
+}
+
+export interface TaskHistory {
+  id: string;
+  username: string;
+  action: string;
+  oldValue: string | null;
+  newValue: string | null;
+  timestamp: string;
 }

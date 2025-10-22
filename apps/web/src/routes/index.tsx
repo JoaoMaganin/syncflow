@@ -9,11 +9,11 @@ import { LoginForm } from '@/components/auth/LoginForm'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreateTaskForm } from '@/components/tasks/CreateTaskForm'
-import type { Task } from '../../../../packages/types/TaskTypes'
+import type { mockedTask, Task } from '../../../../packages/types/TaskTypes'
 import { UpdateTaskForm } from '@/components/tasks/UpdateTaskForm'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { TaskCardSkeleton } from './tasks/TaskCardSkeleton'
+import { TaskCardSkeleton } from '../components/tasks/TaskCardSkeleton'
 import { TaskCard } from '@/components/tasks/TaskCard'
 import mockTasks from '../../public/mockTasks.json';
 import "../index.css";
@@ -82,7 +82,7 @@ function HomePage() {
             {/* Aplicamos uma opacidade para dar a ideia de "desabilitado" */}
             <ul className="space-y-4 opacity-70">
               {/* Mapeamos o array 'mockTasks' importado */}
-              {(mockTasks as Task[]).map((task: Task) => (
+              {(mockTasks as mockedTask[]).map((task: any) => (
                 // Usamos o mesmo JSX do seu 'if (tasks)', mas SEM os botões
                 <TaskCard
                   key={task.id}
@@ -99,7 +99,7 @@ function HomePage() {
 
     if (isLoading) {
       return (
-        <div className="mt-8 w-full max-w-2xl space-y-4">
+        <div className="mt-8 w-full max-w-2xl space-y-4 items-center">
           <TaskCardSkeleton />
           <TaskCardSkeleton />
           <TaskCardSkeleton />

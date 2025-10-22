@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { privateClient } from '@/services/base'
-import type { Task, Comment, TaskPriority } from '../../../../../packages/types/TaskTypes'
+import type { Task, Comment } from '../../../../../packages/types/TaskTypes'
 import { CreateCommentForm } from '@/components/tasks/CreateCommentForm'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -110,7 +110,7 @@ function TaskDetailPage() {
                         <p className="text-muted-foreground mt-3 text-base">
                             {task?.description || 'Nenhuma descrição fornecida.'}
                         </p>
-                        
+
                         <p className="text-sm text-muted-foreground mb-2">
                             Criado por: <span className="font-medium text-foreground">{task?.ownerUsername}</span>
                         </p>
@@ -217,6 +217,39 @@ function TaskDetailPage() {
                                     ))}
                                 </div>
                             </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* --- Card de hisórico --- */}
+                <Card className="border border-muted bg-background/60 backdrop-blur-md">
+                    <CardHeader>
+                        <CardTitle className={`text-2xl font-bold flex items-center gap-2 ${greenAnimation()}`}>
+                            Histórico de Alterações
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {task?.history && task.history.length > 0 ? (
+                            <ul className="space-y-4">
+                                {task.history.map((log) => (
+                                    <li key={log.id} className="text-sm text-muted-foreground">
+                                        <span className="font-medium text-foreground">{log.username}</span>
+                                        {' '}
+                                        {/* Lógica para formatar a mensagem */}
+                                        {log.action === 'TASK_CREATED' && `criou a tarefa: "${log.newValue}".`}
+                                        {log.action === 'STATUS_CHANGED' && `mudou o status de "${log.oldValue}" para "${log.newValue}".`}
+                                        {log.action === 'PRIORITY_CHANGED' && `mudou a prioridade de "${log.oldValue}" para "${log.newValue}".`}
+                                        {log.action === 'ASSIGNEE_ADDED' && `atribuiu "${log.newValue}".`}
+                                        {log.action === 'ASSIGNEE_REMOVED' && `removeu a atribuição de "${log.oldValue}".`}
+
+                                        <span className="block text-xs mt-1">
+                                            {new Date(log.timestamp).toLocaleString()}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">Nenhuma alteração registrada ainda.</p>
                         )}
                     </CardContent>
                 </Card>
